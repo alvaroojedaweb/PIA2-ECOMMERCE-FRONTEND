@@ -9,7 +9,7 @@ import { adminApi } from './adminApi.js';
 // POST /auth/admin/login -> Inicia sesión como administrador.
 // Recibe email y password del formulario y devuelve token + datos del usuario.
 export const loginAdmin = async (email, password) => {
-    return adminApi.post('/auth/admin/login', { email, password });
+    return adminApi.post('api/auth/login-admin', { email, password });
 };
 
 // GET /auth/admin/refresh -> Valida el token actual y devuelve uno renovado.

@@ -1,6 +1,7 @@
 // AdminAuthContext.jsx - Contexto de autenticación exclusivo del panel de administración.
 
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { loginAdmin } from '../services/adminService.js';
 
 // Creamos el contexto. El valor por defecto es null hasta que se provea.
 const AdminAuthContext = createContext(null);
@@ -35,16 +36,16 @@ export function AdminAuthProvider({ children }) {
         validarToken();
     }, [validarToken]);
 
-    // login: ignora email y password, siempre devuelve un admin de prueba
+    // login: autentica al administrador mediante el backend
     const login = async (email, password) => {
-        const nuevoToken = "token-falso";
-        const nuevoAdmin = {
-            id: 1,
-            nombre: "Admin Demo",
-            email: email || "demo@admin.test",
-            rol: "ADMIN",
-            rolId: 1,
-        };
+        const datos = await loginAdmin(email, password);
+
+        const nuevoToken = datos.token || datos.accessToken;
+        const nuevoAdmin = datos.usuario || datos.user || datos.admin;
+
+        if (!nuevoToken || !nuevoAdmin) {
+            throw new Error('Respuesta de autenticación inválida');
+        }
 
         localStorage.setItem("adminToken", nuevoToken);
         localStorage.setItem("adminUsuario", JSON.stringify(nuevoAdmin));
