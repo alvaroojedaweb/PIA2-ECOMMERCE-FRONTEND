@@ -25,9 +25,9 @@ export const obtenerPerfilAdmin = async () => {
 
 // CRUD de administradores bajo /admin.
 // Los endpoints POST, PUT y DELETE están protegidos en el backend para rol ADMIN.
-export const listarAdministradores = async () => adminApi.get('/admin/usuarios');
-export const obtenerAdministradorPorId = async (id) => adminApi.get(`/admin/usuarios/${id}`);
-export const crearAdministrador = async (datos) => adminApi.post('/admin/usuarios', datos);
-export const actualizarAdministrador = async (id, datos) => adminApi.put(`/admin/usuarios/${id}`, datos);
-export const eliminarAdministrador = async (id) => adminApi.delete(`/admin/usuarios/${id}`);
-export const listarRolesAdmin = async () => adminApi.get('/admin/roles');
+export const listarAdministradores = async () => adminApi.get('/api/empleados');
+export const obtenerAdministradorPorId = async (id) => adminApi.get(`/api/empleados/${id}`);
+export const crearAdministrador = async (datos) => adminApi.post('/api/empleados', datos);
+export const actualizarAdministrador = async (id, datos) => adminApi.put(`/api/empleados/${id}`, datos);
+export const eliminarAdministrador = async (id) => adminApi.delete(`/api/empleados/${id}`);
+export const listarRolesAdmin = async () => adminApi.get('/api/roles');
