@@ -395,12 +395,12 @@ function AdminUsuarios() {
                                     <td className="px-4 py-3 text-slate-600">{u.email}</td>
                                     <td className="px-4 py-3">
                                         <span
-                                            className={`rounded-full px-2.5 py-0.5 text-xs font-semibold uppercase ${u.rol?.nombre === 'ADMIN'
+                                            className={`rounded-full px-2.5 py-0.5 text-xs font-semibold uppercase ${u?.rol === 'ADMIN'
                                                 ? 'bg-indigo-100 text-indigo-700'
                                                 : 'bg-slate-100 text-slate-700'
                                                 }`}
                                         >
-                                            {u.rol?.nombre || '-'}
+                                            {u?.rol || '-'}
                                         </span>
                                     </td>
                                     {puedeEscribir && (
