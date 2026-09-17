@@ -65,7 +65,7 @@ export function AdminAuthProvider({ children }) {
 
     // Helpers de rol
     const esAdmin = admin?.rol?.toUpperCase() === 'ADMIN';
-    const esOperador = admin?.rol?.toUpperCase() === 'OPERADOR';
+    const esOperador = admin?.rol?.toUpperCase() === 'STAFF';
     const puedeEscribir = esAdmin;
 
     const value = {
