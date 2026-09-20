@@ -17,6 +17,7 @@ import AdminLayout from './AdminLayout.jsx';
 import LoginAdmin from './LoginAdmin.jsx';
 import AdminDashboard from './AdminDashboard.jsx';
 import AdminUsuarios from './AdminUsuarios.jsx';
+import AdminProductos from './Productos/AdminProductos.jsx';
 
 function AdminRoutes() {
     return (
@@ -40,6 +41,8 @@ function AdminRoutes() {
                 <Route index element={<AdminDashboard />} />
                 {/* /admin/usuarios: CRUD de administradores */}
                 <Route path="usuarios" element={<AdminUsuarios />} />
+                                {/* /admin/usuarios: CRUD de administradores */}
+                <Route path="productos" element={<AdminProductos />} />
             </Route>
         </Routes>
     );
