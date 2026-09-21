@@ -1,18 +1,25 @@
 import { useEffect, useState } from 'react';
 import { useAdminAuth } from '../../../context/AdminAuthContext.jsx';
-import {
-    listarAdministradores,
-    listarRolesAdmin,
-    crearAdministrador,
-    actualizarAdministrador,
-    eliminarAdministrador,
-} from '../../../services/adminService.js';
 import { api } from '../../../services/api.js';
 
+const crearProducto = async (datos) => {
+    return api.post('/api/productos', datos);
+}
+const actualizarProducto = async (id, datos) => {
+    return api.put(`/api/productos/${id}`, datos);
+}
+
+const eliminarProducto = async (id) => {
+    return api.delete(`/api/productos/${id}`);
+}
+
+
 function AdminProductos() {
-    const { puedeEscribir, admin } = useAdminAuth();
+    const { puedeEscribir } = useAdminAuth();
 
     const [productos, setProductos] = useState([]);
+    const [marcas, setMarcas] = useState([]);
+    const [modelos, setModelos] = useState([]);
     const [cargando, setCargando] = useState(true);
     const [error, setError] = useState('');
     const [mensaje, setMensaje] = useState('');
@@ -29,7 +36,10 @@ function AdminProductos() {
         almacenamientoGb: "",
         stock: "",
         pesoG: "",
-        modeloId: ""
+        modeloId: "",
+        modelo: "",
+        marcaId: "",
+        marca: ""
     });
 
     // cargarDatos: trae del backend la lista de usuarios y, si el admin
@@ -37,10 +47,13 @@ function AdminProductos() {
     const cargarDatos = async () => {
         try {
             setCargando(true);
-            console.log('Cargando lista de productos...');
             const dataProductos = await api.get('/api/productos');
-            console.log('Productos recibidos:', dataProductos);
             setProductos(dataProductos || []);
+            const dataMarcas = await api.get('/api/marcas');
+            setMarcas(dataMarcas || []);
+            console.log('Marcas cargadas:', dataMarcas);
+            const dataModelos = await api.get('/api/modelos');
+            setModelos(dataModelos || []);
         } catch (err) {
             console.error('Error al cargar productos:', err);
             setError(err.message || 'Error al cargar los datos.');
@@ -58,6 +71,7 @@ function AdminProductos() {
     const handleChange = (e) => {
         const { name, value } = e.target;
         setForm((prev) => ({ ...prev, [name]: value }));
+        console.log('Formulario actualizado:', { ...form, [name]: value });
     };
 
     // iniciarCreacion: limpia el formulario y abre el modal en modo creación.
@@ -71,15 +85,18 @@ function AdminProductos() {
             almacenamientoGb: "",
             stock: "",
             pesoG: "",
-            modeloId: ""
+            modeloId: "",
+            modelo: "",
+            marcaId: "",
+            marca: ""
         });
         setModoFormulario(true);
         setError('');
         setMensaje('');
     };
 
-    // iniciarEdicion: carga los datos del usuario en el formulario y abre
-    // el modal en modo edición. La contraseña se deja vacía para no cambiarla.
+    // iniciarEdicion: carga los datos del producto en el formulario y abre
+    // el modal en modo edición.
     const iniciarEdicion = (producto) => {
         setEditandoId(producto.id);
         setForm({
@@ -90,7 +107,10 @@ function AdminProductos() {
             almacenamientoGb: producto.almacenamientoGb || '',
             stock: producto.stock || '',
             pesoG: producto.pesoG || '',
-            modeloId: producto.modeloId || ''
+            modeloId: producto.modeloId || '',
+            modelo: producto.modelo || '',
+            marcaId: producto.marcaId || '',
+            marca: producto.marca || ''
         });
         setModoFormulario(true);
         setError('');
@@ -108,7 +128,10 @@ function AdminProductos() {
             almacenamientoGb: "",
             stock: "",
             pesoG: "",
-            modeloId: ""
+            modeloId: "",
+            modelo: "",
+            marcaId: "",
+            marca: ""
         });
         setError('');
     };
@@ -127,21 +150,32 @@ function AdminProductos() {
 
         try {
             const datos = { ...form };
-            // Si la contraseña está vacía en edición, no la enviamos.
-
+            
             if (editandoId) {
                 console.log('Actualizando producto:', editandoId, datos);
-                await actualizarAdministrador(editandoId, datos);
+                await actualizarProducto(editandoId, datos);
                 setMensaje('Producto actualizado correctamente.');
             } else {
                 console.log('Creando producto:', datos);
-                await crearAdministrador(datos);
+                await crearProducto(datos);
                 setMensaje('Producto creado correctamente.');
             }
 
             setModoFormulario(false);
             setEditandoId(null);
-            setForm({ nombre: '', descripcion: '', categoria: '', precio: '', almacenamientoGb: '', stock: '', pesoG: '', modeloId: '' });
+            setForm({
+                nombre: "",
+                descripcion: "",
+                categoria: "",//'CELULARES', 'ACCESORIOS'
+                precio: "",
+                almacenamientoGb: "",
+                stock: "",
+                pesoG: "",
+                modeloId: "",
+                modelo: "",
+                marcaId: "",
+                marca: ""
+            });
             await cargarDatos();
         } catch (err) {
             console.error('Error al guardar producto:', err);
@@ -152,10 +186,6 @@ function AdminProductos() {
     // handleEliminar: pide confirmación y elimina el producto. Evita que
     // un admin se elimine a sí mismo.
     const handleEliminar = async (id) => {
-        if (id === admin?.id) {
-            setError('No podés eliminar tu propio producto.');
-            return;
-        }
 
         if (!confirm('¿Estás seguro de que querés eliminar este producto?')) {
             return;
@@ -163,7 +193,7 @@ function AdminProductos() {
 
         try {
             console.log('Eliminando producto:', id);
-            await eliminarAdministrador(id);
+            await eliminarProducto(id);
             setMensaje('Producto eliminado correctamente.');
             await cargarDatos();
         } catch (err) {
@@ -273,7 +303,7 @@ function AdminProductos() {
                         <form onSubmit={handleSubmit} className="p-6">
                             <div className="grid gap-4 sm:grid-cols-2">
                                 <div>
-                                    <label className="mb-1 block text-sm font-medium text-slate-700">Nombre *</label>
+                                    <label className="mb-1 block text-sm font-medium text-slate-700">Nombre</label>
                                     <input
                                         type="text"
                                         name="nombre"
@@ -282,59 +312,116 @@ function AdminProductos() {
                                         className="w-full rounded-lg border border-slate-300 px-3 py-2 text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
                                         required
                                     />
-                                </div>
 
-                                <div>
-                                    <label className="mb-1 block text-sm font-medium text-slate-700">Apellido</label>
-                                    <input
-                                        type="text"
-                                        name="apellido"
-                                        value={form.apellido}
-                                        onChange={handleChange}
-                                        className="w-full rounded-lg border border-slate-300 px-3 py-2 text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="mb-1 block text-sm font-medium text-slate-700">Email *</label>
-                                    <input
-                                        type="email"
-                                        name="email"
-                                        value={form.email}
-                                        onChange={handleChange}
-                                        className="w-full rounded-lg border border-slate-300 px-3 py-2 text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                                        required
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="mb-1 block text-sm font-medium text-slate-700">Contraseña {editandoId ? '(dejar vacía para no cambiar)' : '*'}</label>
-                                    <input
-                                        type="password"
-                                        name="password"
-                                        value={form.password}
-                                        onChange={handleChange}
-                                        className="w-full rounded-lg border border-slate-300 px-3 py-2 text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                                        required={!editandoId}
-                                    />
-                                </div>
-
-                                <div>
-                                    <label className="mb-1 block text-sm font-medium text-slate-700">Rol *</label>
+                                    <label className="mb-1 block text-sm font-medium text-slate-700">Categoria</label>
                                     <select
-                                        name="rolId"
-                                        value={form.rolId}
+                                        name="categoriaId"
+                                        value={form.categoria}
                                         onChange={handleChange}
                                         className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
                                         required
                                     >
-                                        <option value="">Seleccionar rol</option>
-                                        {roles.map((rol) => (
-                                            <option key={rol.id} value={rol.id}>
-                                                {rol.nombre}
+                                        <option value="">Seleccionar categoria</option>
+                                        <option key={"1"} value={"CELULARES"}>CELULARES</option>
+                                        <option key={"2"} value={"ACCESORIOS"}>ACCESORIOS</option>
+
+                                    </select>
+
+                                </div>
+
+                                <div>
+                                    <label className="mb-1 block text-sm font-medium text-slate-700">Marca</label>
+                                    <select
+                                        name="marcaId"
+                                        value={form.marcaId}
+                                        onChange={handleChange}
+                                        className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                                        required
+                                    >
+                                        <option value="">Seleccionar marca</option>
+                                        {marcas.map((marca) => (<option key={marca.id} value={marca.id}>{marca.nombre}</option>
+                                        ))}
+                                        <option value="">Agregar Marca</option>
+
+                                    </select>
+                                    <label className="mb-1 block text-sm font-medium text-slate-700">Modelo</label>
+                                    <select
+                                        name="modeloId"
+                                        value={form.modeloId}
+                                        onChange={handleChange}
+                                        className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                                        required
+                                    >
+                                        <option value="">Seleccionar modelo</option>
+                                        {form.marcaId && modelos.filter((m) => m.marcaId == form.marcaId).map((modelo) => (
+                                            <option key={modelo.id} value={modelo.id}>
+                                                {modelo.nombre}
                                             </option>
                                         ))}
+                                        <option value="">Agregar Modelo</option>
+
                                     </select>
+
+                                </div>
+
+                                <div>
+                                    <label className="mb-1 block text-sm font-medium text-slate-700">Precio</label>
+                                    <input
+                                        type="number"
+                                        name="precio"
+                                        value={form.precio}
+                                        onChange={handleChange}
+                                        className="w-full rounded-lg border border-slate-300 px-3 py-2 text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                                        required
+                                    />
+                                    <label className="mb-1 block text-sm font-medium text-slate-700">Stock</label>
+                                    <input
+                                        type="number"
+                                        name="stock"
+                                        value={form.stock}
+                                        onChange={handleChange}
+                                        className="w-full rounded-lg border border-slate-300 px-3 py-2 text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                                        required
+                                    />
+                                </div>
+
+                                <div>
+                                    <label className="mb-1 block text-sm font-medium text-slate-700">Almacenamiento</label>
+                                    <select
+                                        name="almacenamientoGb"
+                                        value={form.almacenamientoGb}
+                                        onChange={handleChange}
+                                        className="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                                        required
+                                    >
+                                        <option value="">Seleccionar almacenamiento</option>
+                                        <option value="32">32 GB</option>
+                                        <option value="64">64 GB</option>
+                                        <option value="128">128 GB</option>
+                                        <option value="256">256 GB</option>
+                                        <option value="512">512 GB</option>
+                                        <option value="1024">1024 GB</option>
+                                    </select>
+                                    <label className="mb-1 block text-sm font-medium text-slate-700">Peso (Gramos)</label>
+                                    <input
+                                        type="number"
+                                        name="pesoGramos"
+                                        value={form.pesoG}
+                                        onChange={handleChange}
+                                        className="w-full rounded-lg border border-slate-300 px-3 py-2 text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                                        required
+                                    />
+                                </div>
+
+                                <div className="col-span-2">
+                                    <label className="mb-1 block text-sm font-medium text-slate-700">Descripción</label>
+                                    <textarea
+                                        name="descripcion"
+                                        value={form.descripcion}
+                                        onChange={handleChange}
+                                        className="w-full rounded-lg border border-slate-300 px-3 py-2 text-slate-900 focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                                        required={!editandoId}
+                                    />
                                 </div>
                             </div>
 
@@ -355,8 +442,9 @@ function AdminProductos() {
                             </div>
                         </form>
                     </div>
-                </div>
-            )}
+                </div >
+            )
+            }
 
             <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm">
                 <table className="w-full text-sm">
@@ -407,7 +495,7 @@ function AdminProductos() {
                     </tbody>
                 </table>
             </div>
-        </div>
+        </div >
     );
 }
 
