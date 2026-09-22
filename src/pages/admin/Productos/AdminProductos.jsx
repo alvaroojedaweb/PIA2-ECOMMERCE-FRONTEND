@@ -3,6 +3,10 @@ import { useAdminAuth } from '../../../context/AdminAuthContext.jsx';
 import { api } from '../../../services/api.js';
 
 const crearProducto = async (datos) => {
+    delete datos.id;
+    delete datos.modelo;
+    delete datos.marca;
+    delete datos.marcaId;
     return api.post('/api/productos', datos);
 }
 const actualizarProducto = async (id, datos) => {
