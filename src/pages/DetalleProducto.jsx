@@ -1,21 +1,27 @@
 // pages/DetalleProducto.jsx
-// Vista detalle de un producto con galería, info ampliada y botón agregar al carrito.
+// Vista detalle de un producto con galería, info ampliada y agregar al carrito.
 
 import { useState, useEffect } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { api } from "../services/api.js";
 import { useAuth } from "../context/AuthContext.jsx";
+import { useCarrito } from "../context/CarritoContext.jsx";
 
 function DetalleProducto() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { isAuthenticated } = useAuth();
+  const { agregar } = useCarrito();
 
   const [producto, setProducto] = useState(null);
   const [imagenActiva, setImagenActiva] = useState(0);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState("");
   const [cantidad, setCantidad] = useState(1);
+
+  // Estado para feedback de agregar al carrito
+  const [agregando, setAgregando] = useState(false);
+  const [mensajeExito, setMensajeExito] = useState("");
 
   useEffect(() => {
     const cargarProducto = async () => {
@@ -39,13 +45,30 @@ function DetalleProducto() {
     return n.toLocaleString("es-AR", { style: "currency", currency: "ARS" });
   };
 
-  const handleAgregarAlCarrito = () => {
+  const handleAgregarAlCarrito = async () => {
     if (!isAuthenticated) {
       navigate("/login");
       return;
     }
-    // TODO: conectar con CarritoContext en la próxima tanda
-    alert(`Agregar ${cantidad} unidad(es) de "${producto.nombre}" al carrito (próximamente)`);
+
+    try {
+      setAgregando(true);
+      setError("");
+      await agregar(producto.id, cantidad);
+
+      setMensajeExito(
+        `¡Agregado! ${cantidad} ${cantidad === 1 ? "unidad" : "unidades"} de "${producto.nombre}"`
+      );
+
+      // Ocultar mensaje después de 3 segundos
+      setTimeout(() => setMensajeExito(""), 3000);
+    } catch (err) {
+      console.error("Error al agregar al carrito:", err);
+      setError(err.message || "No se pudo agregar al carrito.");
+      setTimeout(() => setError(""), 4000);
+    } finally {
+      setAgregando(false);
+    }
   };
 
   if (cargando) {
@@ -58,7 +81,7 @@ function DetalleProducto() {
     );
   }
 
-  if (error || !producto) {
+  if (error && !producto) {
     return (
       <main className="min-h-screen bg-slate-100 px-4 py-8">
         <div className="mx-auto max-w-6xl rounded-lg border border-red-200 bg-red-50 p-6 text-center">
@@ -74,18 +97,26 @@ function DetalleProducto() {
     );
   }
 
+  if (!producto) {
+    return null;
+  }
+
   const imagenes = producto.imagenes?.length
     ? producto.imagenes
-    : [{ url: "https://via.placeholder.com/600x600?text=Sin+imagen" }];
+    : [{ url: "", id: 0 }];
 
   return (
     <main className="min-h-screen bg-slate-100 px-4 py-8 md:px-8">
       <div className="mx-auto max-w-6xl">
         {/* BREADCRUMB */}
         <div className="mb-6 flex flex-wrap items-center gap-2 text-sm text-slate-500">
-          <Link to="/" className="hover:text-teal-700">Inicio</Link>
+          <Link to="/" className="hover:text-teal-700">
+            Inicio
+          </Link>
           <span>›</span>
-          <Link to="/catalogo" className="hover:text-teal-700">Catálogo</Link>
+          <Link to="/catalogo" className="hover:text-teal-700">
+            Catálogo
+          </Link>
           <span>›</span>
           <span className="font-medium text-slate-700">{producto.nombre}</span>
         </div>
@@ -94,11 +125,15 @@ function DetalleProducto() {
           {/* GALERÍA */}
           <div>
             <div className="mb-3 flex h-96 items-center justify-center rounded-lg bg-slate-50 p-4">
-              <img
-                src={imagenes[imagenActiva].url}
-                alt={producto.nombre}
-                className="h-full w-full object-contain"
-              />
+              {imagenes[imagenActiva].url ? (
+                <img
+                  src={imagenes[imagenActiva].url}
+                  alt={producto.nombre}
+                  className="h-full w-full object-contain"
+                />
+              ) : (
+                <span className="text-6xl">📱</span>
+              )}
             </div>
             {imagenes.length > 1 && (
               <div className="flex gap-2">
@@ -155,8 +190,12 @@ function DetalleProducto() {
               )}
               {producto.almacenamientoGb && (
                 <p>
-                  <span className="font-medium text-slate-700">Almacenamiento:</span>{" "}
-                  <span className="text-slate-600">{producto.almacenamientoGb} GB</span>
+                  <span className="font-medium text-slate-700">
+                    Almacenamiento:
+                  </span>{" "}
+                  <span className="text-slate-600">
+                    {producto.almacenamientoGb} GB
+                  </span>
                 </p>
               )}
               {producto.pesoG && (
@@ -178,6 +217,20 @@ function DetalleProducto() {
                 </span>
               </p>
             </div>
+
+            {/* MENSAJE DE ÉXITO */}
+            {mensajeExito && (
+              <div className="mb-4 rounded-lg border border-green-200 bg-green-50 p-3 text-sm font-medium text-green-800">
+                ✓ {mensajeExito}
+              </div>
+            )}
+
+            {/* MENSAJE DE ERROR (agregar al carrito) */}
+            {error && producto && (
+              <div className="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm font-medium text-red-700">
+                {error}
+              </div>
+            )}
 
             {/* CANTIDAD + AGREGAR */}
             {producto.stock > 0 && (
@@ -209,9 +262,10 @@ function DetalleProducto() {
 
                 <button
                   onClick={handleAgregarAlCarrito}
-                  className="w-full rounded-lg bg-teal-700 py-3 font-medium text-white transition hover:bg-teal-600"
+                  disabled={agregando}
+                  className="w-full rounded-lg bg-teal-700 py-3 font-medium text-white transition hover:bg-teal-600 disabled:cursor-not-allowed disabled:opacity-50"
                 >
-                  Agregar al carrito
+                  {agregando ? "Agregando..." : "Agregar al carrito"}
                 </button>
               </div>
             )}

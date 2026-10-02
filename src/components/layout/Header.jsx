@@ -31,7 +31,10 @@ function Header() {
     <header className="sticky top-0 z-50 w-full border-b border-slate-200 bg-white/95 backdrop-blur">
       <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-4 px-4 sm:px-6 lg:px-8">
         {/* LOGO */}
-        <NavLink to="/" className="shrink-0 text-xl font-bold tracking-tight text-teal-900">
+        <NavLink
+          to="/"
+          className="shrink-0 text-xl font-bold tracking-tight text-teal-900"
+        >
           Celular<span className="text-slate-700">Tech</span>
         </NavLink>
 
@@ -107,11 +110,15 @@ function Header() {
           {/* Estado de autenticación */}
           {isAuthenticated ? (
             <div className="flex items-center gap-3">
+              <NavLink to="/mis-pedidos" className={navClass}>
+                Mis Pedidos
+              </NavLink>
               <NavLink to="/perfil" className={navClass}>
                 Mi Perfil
               </NavLink>
               <span className="text-sm font-medium text-slate-700">
-                Hola, <strong className="text-slate-900">{usuario?.nombre}</strong>
+                Hola,{" "}
+                <strong className="text-slate-900">{usuario?.nombre}</strong>
               </span>
               <button
                 onClick={logout}
@@ -225,19 +232,36 @@ function Header() {
       {/* Menú móvil desplegado */}
       {abierto && (
         <nav className="flex flex-col gap-1 border-t border-slate-200 bg-white px-4 py-3 md:hidden">
-          <NavLink to="/" className={navClass} end onClick={() => setAbierto(false)}>
+          <NavLink
+            to="/"
+            className={navClass}
+            end
+            onClick={() => setAbierto(false)}
+          >
             Inicio
           </NavLink>
 
-          <NavLink to="/catalogo" className={navClass} onClick={() => setAbierto(false)}>
+          <NavLink
+            to="/catalogo"
+            className={navClass}
+            onClick={() => setAbierto(false)}
+          >
             Catálogo
           </NavLink>
 
-          <NavLink to="/contacto" className={navClass} onClick={() => setAbierto(false)}>
+          <NavLink
+            to="/contacto"
+            className={navClass}
+            onClick={() => setAbierto(false)}
+          >
             Contacto
           </NavLink>
 
-          <NavLink to="/carrito" className={navClass} onClick={() => setAbierto(false)}>
+          <NavLink
+            to="/carrito"
+            className={navClass}
+            onClick={() => setAbierto(false)}
+          >
             Carrito
           </NavLink>
 
@@ -245,7 +269,18 @@ function Header() {
 
           {isAuthenticated ? (
             <div className="flex flex-col gap-2 py-1">
-              <NavLink to="/perfil" className={navClass} onClick={() => setAbierto(false)}>
+              <NavLink
+                to="/mis-pedidos"
+                className={navClass}
+                onClick={() => setAbierto(false)}
+              >
+                Mis Pedidos
+              </NavLink>
+              <NavLink
+                to="/perfil"
+                className={navClass}
+                onClick={() => setAbierto(false)}
+              >
                 Mi Perfil
               </NavLink>
               <span className="text-sm font-medium text-slate-700">
@@ -263,10 +298,18 @@ function Header() {
             </div>
           ) : (
             <div className="flex flex-col gap-2 py-1">
-              <NavLink to="/login" className={navClass} onClick={() => setAbierto(false)}>
+              <NavLink
+                to="/login"
+                className={navClass}
+                onClick={() => setAbierto(false)}
+              >
                 Ingresar
               </NavLink>
-              <NavLink to="/registro" className={navClass} onClick={() => setAbierto(false)}>
+              <NavLink
+                to="/registro"
+                className={navClass}
+                onClick={() => setAbierto(false)}
+              >
                 Registrarse
               </NavLink>
             </div>

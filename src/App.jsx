@@ -1,21 +1,24 @@
-import { BrowserRouter, Routes, Route } from 'react-router-dom';
-import { AuthProvider } from './context/AuthContext.jsx';
-import { AdminAuthProvider } from './context/AdminAuthContext.jsx';
-import RutaProtegida from './components/auth/RutaProtegida.jsx';
-import Header from './components/layout/Header.jsx';
-import Footer from './components/layout/Footer.jsx';
-import Inicio from './pages/Inicio.jsx';
-import Catalogo from './pages/Catalogo.jsx';
-import Contacto from './pages/Contacto.jsx';
-import Login from './pages/Login.jsx';
-import Registro from './pages/Registro.jsx';
-import Perfil from './pages/Perfil.jsx';
-import AdminRoutes from './pages/admin/AdminRoutes.jsx';
-import { BusquedaProvider } from './context/BusquedaContext.jsx';
-import DetalleProducto from './pages/DetalleProducto.jsx';
-import { CarritoProvider } from './context/CarritoContext.jsx';
-import Carrito from './pages/Carrito.jsx';
-import './App.css';
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { AuthProvider } from "./context/AuthContext.jsx";
+import { AdminAuthProvider } from "./context/AdminAuthContext.jsx";
+import RutaProtegida from "./components/auth/RutaProtegida.jsx";
+import Header from "./components/layout/Header.jsx";
+import Footer from "./components/layout/Footer.jsx";
+import Inicio from "./pages/Inicio.jsx";
+import Catalogo from "./pages/Catalogo.jsx";
+import Contacto from "./pages/Contacto.jsx";
+import Login from "./pages/Login.jsx";
+import Registro from "./pages/Registro.jsx";
+import Perfil from "./pages/Perfil.jsx";
+import AdminRoutes from "./pages/admin/AdminRoutes.jsx";
+import { BusquedaProvider } from "./context/BusquedaContext.jsx";
+import DetalleProducto from "./pages/DetalleProducto.jsx";
+import { CarritoProvider } from "./context/CarritoContext.jsx";
+import Carrito from "./pages/Carrito.jsx";
+import Checkout from "./pages/Checkout.jsx";
+import ConfirmacionOrden from "./pages/ConfirmacionOrden.jsx";
+import MisPedidos from "./pages/MisPedidos.jsx";
+import "./App.css";
 
 // PublicLayout agrupa todas las rutas públicas con el mismo Header, Footer
 // y estilo. Dentro contiene otro <Routes> con las rutas del sitio.
@@ -32,6 +35,30 @@ function PublicLayout() {
           <Route path="/login" element={<Login />} />
           <Route path="/registro" element={<Registro />} />
           <Route path="/carrito" element={<Carrito />} />
+          <Route
+            path="/checkout"
+            element={
+              <RutaProtegida>
+                <Checkout />
+              </RutaProtegida>
+            }
+          />
+          <Route
+            path="/orden/:id"
+            element={
+              <RutaProtegida>
+                <ConfirmacionOrden />
+              </RutaProtegida>
+            }
+          />
+          <Route
+            path="/mis-pedidos"
+            element={
+              <RutaProtegida>
+                <MisPedidos />
+              </RutaProtegida>
+            }
+          />
           <Route
             path="/perfil"
             element={
