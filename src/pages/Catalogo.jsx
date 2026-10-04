@@ -1,8 +1,5 @@
-// pages/Catalogo.jsx
-// Catálogo público con filtros, búsqueda y paginación real.
-
 import { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { useBusqueda } from "../context/BusquedaContext.jsx";
 import { api } from "../services/api.js";
 
@@ -10,23 +7,22 @@ const LIMIT = 6; // productos por página
 
 function Catalogo() {
   const { busqueda } = useBusqueda();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   // Estado de datos
   const [productos, setProductos] = useState([]);
   const [marcas, setMarcas] = useState([]);
   const [categorias, setCategorias] = useState([]);
 
-  // Estado de filtros
-  const [categoriaId, setCategoriaId] = useState("");
-  const [marcaId, setMarcaId] = useState("");
-  const [busquedaLocal, setBusquedaLocal] = useState("");
+  // Estado de filtros (inicializados desde la URL)
+  const [categoriaId, setCategoriaId] = useState(searchParams.get("categoriaId") || "");
+  const [marcaId, setMarcaId] = useState(searchParams.get("marcaId") || "");
+  const [busquedaLocal, setBusquedaLocal] = useState(searchParams.get("q") || "");
+  const [page, setPage] = useState(parseInt(searchParams.get("page")) || 1);
 
-  // Estado de paginación
-  const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalItems, setTotalItems] = useState(0);
 
-  // Estado de carga/error
   const [cargando, setCargando] = useState(false);
   const [error, setError] = useState("");
 
@@ -52,6 +48,31 @@ function Catalogo() {
     };
     cargarFiltros();
   }, []);
+
+  // Detectar cambios en los query params (por si vienen de un link externo)
+  useEffect(() => {
+    const cat = searchParams.get("categoriaId") || "";
+    const mar = searchParams.get("marcaId") || "";
+    const q = searchParams.get("q") || "";
+    const p = parseInt(searchParams.get("page")) || 1;
+
+    if (cat !== categoriaId) setCategoriaId(cat);
+    if (mar !== marcaId) setMarcaId(mar);
+    if (q !== busquedaLocal) setBusquedaLocal(q);
+    if (p !== page) setPage(p);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchParams]);
+
+  // Sincronizar filtros con la URL
+  useEffect(() => {
+    const params = new URLSearchParams();
+    if (categoriaId) params.set("categoriaId", categoriaId);
+    if (marcaId) params.set("marcaId", marcaId);
+    if (busquedaLocal) params.set("q", busquedaLocal);
+    if (page > 1) params.set("page", page);
+
+    setSearchParams(params, { replace: true });
+  }, [categoriaId, marcaId, busquedaLocal, page, setSearchParams]);
 
   // Cargar productos cada vez que cambian los filtros
   useEffect(() => {
@@ -82,9 +103,10 @@ function Catalogo() {
     cargarProductos();
   }, [page, busquedaLocal, categoriaId, marcaId]);
 
-  // Resetear a página 1 cuando cambian los filtros
+  // Resetear a página 1 cuando cambian los filtros (excepto la página misma)
   useEffect(() => {
     setPage(1);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [busquedaLocal, categoriaId, marcaId]);
 
   // Helpers de formato
@@ -103,7 +125,6 @@ function Catalogo() {
     setBusquedaLocal("");
     setPage(1);
   };
-
   return (
     <main className="min-h-screen bg-slate-100 px-4 py-8 md:px-8 lg:px-12">
       {/* BREADCRUMB */}

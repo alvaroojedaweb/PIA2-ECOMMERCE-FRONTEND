@@ -1,25 +1,24 @@
-// RutaProtegida.jsx protege rutas que requieren autenticación.
-// Si el usuario no está logueado, lo redirige a la página de login.
-
-import { Navigate } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext.jsx';
+import { Navigate, useLocation } from "react-router-dom";
+import { useAuth } from "../../context/AuthContext.jsx";
 
 function RutaProtegida({ children }) {
-    const { isAuthenticated, cargando } = useAuth();
+  const { isAuthenticated, cargando } = useAuth();
+  const location = useLocation();
 
-    if (cargando) {
-        return (
-            <div className="flex min-h-[50vh] items-center justify-center">
-                <p className="text-sm font-medium text-slate-500">Cargando...</p>
-            </div>
-        );
-    }
+  if (cargando) {
+    return (
+      <div className="flex min-h-[50vh] items-center justify-center">
+        <p className="text-sm font-medium text-slate-500">Cargando...</p>
+      </div>
+    );
+  }
 
-    if (!isAuthenticated) {
-        return <Navigate to="/login" replace />;
-    }
+  if (!isAuthenticated) {
+    // Guardamos la ruta actual en state para redirigir después del login
+    return <Navigate to="/login" replace state={{ from: location.pathname }} />;
+  }
 
-    return children;
+  return children;
 }
 
 export default RutaProtegida;
