@@ -45,27 +45,26 @@ function AdminUsuarios() {
     // cargarDatos: trae del backend la lista de usuarios y, si el admin
     // tiene permiso de escritura, también los roles para el select del modal.
     const cargarDatos = async () => {
-        try {
-            setCargando(true);
-            console.log('Cargando lista de administradores...');
-            const dataUsuarios = await listarAdministradores();
-            console.log('Administradores recibidos:', dataUsuarios);
-            setUsuarios(dataUsuarios || []);
+  try {
+    setCargando(true);
+    console.log("Cargando lista de administradores...");
+    const dataUsuarios = await listarAdministradores();
+    console.log("Administradores recibidos:", dataUsuarios);
+    setUsuarios(dataUsuarios?.data || []);  // ← FIX: extraer .data
 
-            if (puedeEscribir) {
-                console.log('Cargando roles...');
-                const dataRoles = await listarRolesAdmin();
-                console.log('Roles recibidos:', dataRoles);
-                setRoles(dataRoles || []);
-            }
-        } catch (err) {
-            console.error('Error al cargar administradores:', err);
-            setError(err.message || 'Error al cargar los datos.');
-        } finally {
-            setCargando(false);
-        }
-    };
-
+    if (puedeEscribir) {
+      console.log("Cargando roles...");
+      const dataRoles = await listarRolesAdmin();
+      console.log("Roles recibidos:", dataRoles);
+      setRoles(dataRoles?.data || []);       // ← FIX: extraer .data
+    }
+  } catch (err) {
+    console.error("Error al cargar administradores:", err);
+    setError(err.message || "Error al cargar los datos.");
+  } finally {
+    setCargando(false);
+  }
+};
     // useEffect que carga los datos al montar el componente.
     // Depende de puedeEscribir porque el admin necesita roles solo si puede crear/editar.
     useEffect(() => {
