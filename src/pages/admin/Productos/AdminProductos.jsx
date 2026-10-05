@@ -54,7 +54,7 @@ const CampoForm = ({ label, as: Tag = 'input', children, ...props }) => (
 
 const ModalForm = ({ modal, onChange, onAgregarNuevo, onSubmit, onClose, marcas = [], modelos = [], categorias = [] }) => {
     if (!modal.abierto) return null;
-    const { id, form } = modal;
+    const { id, form, soloLectura } = modal;
     
     // Aseguramos que siempre sean arreglos iterables (.map)
     const arrCategorias = extraerArray(categorias);
@@ -75,47 +75,47 @@ const ModalForm = ({ modal, onChange, onAgregarNuevo, onSubmit, onClose, marcas 
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm" onClick={e => e.target === e.currentTarget && onClose()}>
             <div className="w-full max-w-2xl overflow-hidden rounded-2xl bg-white shadow-2xl">
                 <div className="flex items-center justify-between border-b px-6 py-4">
-                    <h3 className="text-lg font-bold">{id ? 'Editar' : 'Nuevo'} producto</h3>
+                    <h3 className="text-lg font-bold">{soloLectura ? 'Detalle del producto' : `${id ? 'Editar' : 'Nuevo'} producto`}</h3>
                     <button type="button" onClick={onClose} className="text-slate-400 text-2xl hover:text-slate-600">&times;</button>
                 </div>
                 <form onSubmit={onSubmit} className="p-6 grid gap-4 sm:grid-cols-2">
-                    <CampoForm label="Nombre" name="nombre" value={form.nombre} onChange={onChange} required />
+                    <CampoForm label="Nombre" name="nombre" value={form.nombre} onChange={onChange} required disabled={soloLectura} />
                     
-                    <CampoForm label="Categoría" as="select" name="categoriaId" value={form.categoriaId} onChange={e => handleSelectChange(e, 'categoria')} required>
+                    <CampoForm label="Categoría" as="select" name="categoriaId" value={form.categoriaId} onChange={e => handleSelectChange(e, 'categoria')} required disabled={soloLectura}>
                         <option value="">Seleccionar...</option>
                         {arrCategorias.map(c => <option key={c.id} value={c.id}>{c.nombre}</option>)}
                         <option value="__NUEVO__" className="font-semibold text-indigo-600">+ Agregar nueva categoría</option>
                     </CampoForm>
 
-                    <CampoForm label="Marca" as="select" name="marcaId" value={form.marcaId} onChange={e => handleSelectChange(e, 'marca')} required>
+                    <CampoForm label="Marca" as="select" name="marcaId" value={form.marcaId} onChange={e => handleSelectChange(e, 'marca')} required disabled={soloLectura}>
                         <option value="">Seleccionar...</option>
                         {arrMarcas.map(m => <option key={m.id} value={m.id}>{m.nombre}</option>)}
                         <option value="__NUEVO__" className="font-semibold text-indigo-600">+ Agregar nueva marca</option>
                     </CampoForm>
 
-                    <CampoForm label="Modelo" as="select" name="modeloId" value={form.modeloId} onChange={e => handleSelectChange(e, 'modelo')} required>
+                    <CampoForm label="Modelo" as="select" name="modeloId" value={form.modeloId} onChange={e => handleSelectChange(e, 'modelo')} required disabled={soloLectura}>
                         <option value="">Seleccionar...</option>
                         {modelosFiltrados.map(m => <option key={m.id} value={m.id}>{m.nombre}</option>)}
                         <option value="__NUEVO__" className="font-semibold text-indigo-600">+ Agregar nuevo modelo</option>
                     </CampoForm>
 
-                    <CampoForm label="Precio" type="number" name="precio" value={form.precio} onChange={onChange} required />
-                    <CampoForm label="Stock" type="number" name="stock" value={form.stock} onChange={onChange} required />
+                    <CampoForm label="Precio" type="number" name="precio" value={form.precio} onChange={onChange} required disabled={soloLectura} />
+                    <CampoForm label="Stock" type="number" name="stock" value={form.stock} onChange={onChange} required disabled={soloLectura} />
                     
-                    <CampoForm label="Almacenamiento (GB)" as="select" name="almacenamientoGb" value={form.almacenamientoGb} onChange={onChange} required>
+                    <CampoForm label="Almacenamiento (GB)" as="select" name="almacenamientoGb" value={form.almacenamientoGb} onChange={onChange} required disabled={soloLectura}>
                         <option value="">Seleccionar...</option>
                         {['32', '64', '128', '256', '512', '1024'].map(v => <option key={v} value={v}>{v} GB</option>)}
                     </CampoForm>
                     
-                    <CampoForm label="Peso (g)" type="number" name="pesoG" value={form.pesoG} onChange={onChange} required />
+                    <CampoForm label="Peso (g)" type="number" name="pesoG" value={form.pesoG} onChange={onChange} required disabled={soloLectura} />
                     
                     <div className="col-span-2">
-                        <CampoForm label="Descripción" as="textarea" name="descripcion" value={form.descripcion} onChange={onChange} required={!id} />
+                        <CampoForm label="Descripción" as="textarea" name="descripcion" value={form.descripcion} onChange={onChange} required={!id} disabled={soloLectura} />
                     </div>
                     
                     <div className="col-span-2 mt-4 flex justify-end gap-3">
-                        <button type="button" onClick={onClose} className="rounded-lg border px-4 py-2 text-sm font-medium hover:bg-slate-100">Cancelar</button>
-                        <button type="submit" className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-500">Guardar</button>
+                        <button type="button" onClick={onClose} className="rounded-lg border px-4 py-2 text-sm font-medium hover:bg-slate-100">{soloLectura ? 'Cerrar' : 'Cancelar'}</button>
+                        {!soloLectura && <button type="submit" className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-500">Guardar</button>}
                     </div>
                 </form>
             </div>
@@ -123,7 +123,7 @@ const ModalForm = ({ modal, onChange, onAgregarNuevo, onSubmit, onClose, marcas 
     );
 };
 
-const TablaProductos = ({ productos = [], puedeEscribir, onEdit, onDelete }) => {
+const TablaProductos = ({ productos = [], puedeEscribir, onView, onEdit, onDelete }) => {
     const arrProductos = extraerArray(productos);
     
     return (
@@ -149,14 +149,31 @@ const TablaProductos = ({ productos = [], puedeEscribir, onEdit, onDelete }) => 
                             <td className="px-4 py-3">{p.stock || '-'}</td>
                             <td className="px-4 py-3">{p.categoria || '-'}</td>
                             <td className="px-4 py-3">
-                                <button onClick={() => onEdit(p)} className="text-indigo-600 font-medium hover:bg-indigo-50 px-2 py-1 rounded">
-                                    Ver {puedeEscribir && '/ Editar'}
+                                <div className="flex flex-wrap items-center gap-1">
+                                <button type="button" onClick={() => onView(p)} title="Ver detalle" aria-label={`Ver detalle de ${p.nombre}`} className="inline-flex items-center gap-1 rounded px-2 py-1 font-medium text-indigo-600 hover:bg-indigo-50">
+                                    <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+                                    </svg>
+                                    Ver
                                 </button>
                                 {puedeEscribir && (
-                                    <button onClick={() => onDelete(p.id)} className="text-red-600 font-medium hover:bg-red-50 px-2 py-1 rounded ml-1">
-                                        Eliminar
-                                    </button>
+                                    <>
+                                        <button type="button" onClick={() => onEdit(p)} title="Editar" aria-label={`Editar ${p.nombre}`} className="inline-flex items-center gap-1 rounded px-2 py-1 font-medium text-blue-600 hover:bg-blue-50">
+                                            <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                                            </svg>
+                                            Editar
+                                        </button>
+                                        <button type="button" onClick={() => onDelete(p.id)} title="Eliminar" aria-label={`Eliminar ${p.nombre}`} className="inline-flex items-center gap-1 rounded px-2 py-1 font-medium text-red-600 hover:bg-red-50">
+                                            <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                            </svg>
+                                            Eliminar
+                                        </button>
+                                    </>
                                 )}
+                                </div>
                             </td>
                         </tr>
                     ))}
@@ -176,7 +193,7 @@ export default function AdminProductos() {
     const [data, setData] = useState({ productos: [], marcas: [], modelos: [], categorias: [] });
     const [msj, setMsj] = useState({ error: '', exito: '' });
     const [cargando, setCargando] = useState(true);
-    const [modal, setModal] = useState({ abierto: false, id: null, form: INITIAL_FORM });
+    const [modal, setModal] = useState({ abierto: false, id: null, form: INITIAL_FORM, soloLectura: false });
 
     const cargarDatos = async () => {
         setCargando(true);
@@ -203,12 +220,12 @@ export default function AdminProductos() {
 
     useEffect(() => { cargarDatos(); }, [puedeEscribir]);
 
-    const abrirModal = (prod = null) => {
-        setModal({ abierto: true, id: prod?.id || null, form: prod ? { ...INITIAL_FORM, ...prod } : INITIAL_FORM });
+    const abrirModal = (prod = null, soloLectura = false) => {
+        setModal({ abierto: true, id: prod?.id || null, form: prod ? { ...INITIAL_FORM, ...prod } : INITIAL_FORM, soloLectura });
         setMsj({ error: '', exito: '' });
     };
 
-    const cerrarModal = () => setModal({ abierto: false, id: null, form: INITIAL_FORM });
+    const cerrarModal = () => setModal({ abierto: false, id: null, form: INITIAL_FORM, soloLectura: false });
 
     const handleChange = (e) => setModal(m => ({ ...m, form: { ...m.form, [e.target.name]: e.target.value } }));
 
@@ -296,7 +313,10 @@ export default function AdminProductos() {
                     </p>
                 </div>
                 {puedeEscribir && (
-                    <button onClick={() => abrirModal()} className="rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-blue-500">
+                    <button onClick={() => abrirModal()} className="inline-flex items-center gap-2 rounded-xl bg-blue-600 px-4 py-2.5 text-sm font-medium text-white hover:bg-blue-500">
+                        <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                        </svg>
                         + Nuevo producto
                     </button>
                 )}
@@ -307,6 +327,7 @@ export default function AdminProductos() {
             <TablaProductos 
                 productos={data.productos} 
                 puedeEscribir={puedeEscribir} 
+                onView={p => abrirModal(p, true)}
                 onEdit={abrirModal} 
                 onDelete={handleEliminar} 
             />
