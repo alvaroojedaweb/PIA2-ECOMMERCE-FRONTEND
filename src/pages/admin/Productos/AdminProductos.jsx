@@ -11,7 +11,7 @@ const crearProducto = (datos) => {
     return api.post('/api/productos', payload);
 };
 const actualizarProducto = (id, datos) => api.put(`/api/productos/${id}`, datos);
-const eliminarProducto = (id) => api.delete(`/api/productos/${id}`);
+const eliminarProducto = (id) => api.delete(`/api/productos/${id}/hard`);
 
 
 // ============================================================================
