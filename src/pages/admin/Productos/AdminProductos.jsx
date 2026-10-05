@@ -1,17 +1,27 @@
 import { useEffect, useState } from 'react';
 import { useAdminAuth } from '../../../context/AdminAuthContext.jsx';
-import { adminApi as api} from '../../../services/adminApi.js';
+import { adminApi as api } from '../../../services/adminApi.js';
+
+// Helper para extraer arreglos de forma segura de las respuestas del backend
+const extraerArray = (respuesta) => {
+    if (!respuesta) return [];
+    if (Array.isArray(respuesta)) return respuesta;
+    if (Array.isArray(respuesta.data)) return respuesta.data;
+    return [];
+};
 
 // ============================================================================
-// SERVICIOS (API)
+// SERVICIOS (API) - Sin incluir '/api' duplicado
 // ============================================================================
-const crearProducto = (datos) => {
+const limpiarPayload = (datos) => {
     const payload = { ...datos };
     ['id', 'modelo', 'marca', 'categoria'].forEach(k => delete payload[k]);
-    return api.post('/api/productos', payload);
+    return payload;
 };
-const actualizarProducto = (id, datos) => api.put(`/api/productos/${id}`, datos);
-const eliminarProducto = (id) => api.delete(`/api/productos/${id}/hard`);
+
+const crearProducto = (datos) => api.post('/productos', limpiarPayload(datos));
+const actualizarProducto = (id, datos) => api.put(`/productos/${id}`, limpiarPayload(datos));
+const eliminarProducto = (id) => api.delete(`/productos/${id}/hard`);
 
 
 // ============================================================================
@@ -27,7 +37,6 @@ const INITIAL_FORM = {
 // ============================================================================
 // COMPONENTES UI REUTILIZABLES
 // ============================================================================
-
 const Mensaje = ({ error, exito }) => {
     if (!error && !exito) return null;
     const tipoClase = error ? 'border-red-200 bg-red-50 text-red-700' : 'border-emerald-200 bg-emerald-50 text-emerald-800';
@@ -43,10 +52,16 @@ const CampoForm = ({ label, as: Tag = 'input', children, ...props }) => (
     </div>
 );
 
-const ModalForm = ({ modal, onChange, onAgregarNuevo, onSubmit, onClose, marcas, modelos, categorias }) => {
+const ModalForm = ({ modal, onChange, onAgregarNuevo, onSubmit, onClose, marcas = [], modelos = [], categorias = [] }) => {
     if (!modal.abierto) return null;
     const { id, form } = modal;
-    const modelosFiltrados = form.marcaId ? modelos.filter(m => m.marcaId == form.marcaId) : [];
+    
+    // Aseguramos que siempre sean arreglos iterables (.map)
+    const arrCategorias = extraerArray(categorias);
+    const arrMarcas = extraerArray(marcas);
+    const arrModelos = extraerArray(modelos);
+
+    const modelosFiltrados = form.marcaId ? arrModelos.filter(m => m.marcaId == form.marcaId) : [];
 
     const handleSelectChange = (e, tipo) => {
         if (e.target.value === '__NUEVO__') {
@@ -68,13 +83,13 @@ const ModalForm = ({ modal, onChange, onAgregarNuevo, onSubmit, onClose, marcas,
                     
                     <CampoForm label="Categoría" as="select" name="categoriaId" value={form.categoriaId} onChange={e => handleSelectChange(e, 'categoria')} required>
                         <option value="">Seleccionar...</option>
-                        {categorias.map(c => <option key={c.id} value={c.id}>{c.nombre}</option>)}
+                        {arrCategorias.map(c => <option key={c.id} value={c.id}>{c.nombre}</option>)}
                         <option value="__NUEVO__" className="font-semibold text-indigo-600">+ Agregar nueva categoría</option>
                     </CampoForm>
 
                     <CampoForm label="Marca" as="select" name="marcaId" value={form.marcaId} onChange={e => handleSelectChange(e, 'marca')} required>
                         <option value="">Seleccionar...</option>
-                        {marcas.map(m => <option key={m.id} value={m.id}>{m.nombre}</option>)}
+                        {arrMarcas.map(m => <option key={m.id} value={m.id}>{m.nombre}</option>)}
                         <option value="__NUEVO__" className="font-semibold text-indigo-600">+ Agregar nueva marca</option>
                     </CampoForm>
 
@@ -108,44 +123,48 @@ const ModalForm = ({ modal, onChange, onAgregarNuevo, onSubmit, onClose, marcas,
     );
 };
 
-const TablaProductos = ({ productos, puedeEscribir, onEdit, onDelete }) => (
-    <div className="overflow-hidden rounded-2xl border bg-white shadow-sm mt-6">
-        <table className="w-full text-sm text-left">
-            <thead className="bg-slate-50 text-slate-700">
-                <tr>
-                    {['ID', 'Nombre', 'Marca', 'Modelo', 'Precio', 'Stock', 'Categoría', 'Acciones'].map(h => (
-                        <th key={h} className="px-4 py-3 font-semibold">{h}</th>
-                    ))}
-                </tr>
-            </thead>
-            <tbody className="divide-y divide-slate-100">
-                {!productos.length ? (
-                    <tr><td colSpan="8" className="p-8 text-center text-slate-500">No hay productos registrados.</td></tr>
-                ) : productos.map(p => (
-                    <tr key={p.id} className="hover:bg-slate-50 text-slate-600">
-                        <td className="px-4 py-3">{p.id}</td>
-                        <td className="px-4 py-3 font-medium text-slate-900">{p.nombre}</td>
-                        <td className="px-4 py-3">{p.marca || '-'}</td>
-                        <td className="px-4 py-3">{p.modelo || '-'}</td>
-                        <td className="px-4 py-3">${p.precio != null ? Number(p.precio).toFixed(2) : '-'}</td>
-                        <td className="px-4 py-3">{p.stock || '-'}</td>
-                        <td className="px-4 py-3">{p.categoria || '-'}</td>
-                        <td className="px-4 py-3">
-                            <button onClick={() => onEdit(p)} className="text-indigo-600 font-medium hover:bg-indigo-50 px-2 py-1 rounded">
-                                Ver {puedeEscribir && '/ Editar'}
-                            </button>
-                            {puedeEscribir && (
-                                <button onClick={() => onDelete(p.id)} className="text-red-600 font-medium hover:bg-red-50 px-2 py-1 rounded ml-1">
-                                    Eliminar
-                                </button>
-                            )}
-                        </td>
+const TablaProductos = ({ productos = [], puedeEscribir, onEdit, onDelete }) => {
+    const arrProductos = extraerArray(productos);
+    
+    return (
+        <div className="overflow-hidden rounded-2xl border bg-white shadow-sm mt-6">
+            <table className="w-full text-sm text-left">
+                <thead className="bg-slate-50 text-slate-700">
+                    <tr>
+                        {['ID', 'Nombre', 'Marca', 'Modelo', 'Precio', 'Stock', 'Categoría', 'Acciones'].map(h => (
+                            <th key={h} className="px-4 py-3 font-semibold">{h}</th>
+                        ))}
                     </tr>
-                ))}
-            </tbody>
-        </table>
-    </div>
-);
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                    {!arrProductos.length ? (
+                        <tr><td colSpan="8" className="p-8 text-center text-slate-500">No hay productos registrados.</td></tr>
+                    ) : arrProductos.map(p => (
+                        <tr key={p.id} className="hover:bg-slate-50 text-slate-600">
+                            <td className="px-4 py-3">{p.id}</td>
+                            <td className="px-4 py-3 font-medium text-slate-900">{p.nombre}</td>
+                            <td className="px-4 py-3">{p.marca || '-'}</td>
+                            <td className="px-4 py-3">{p.modelo || '-'}</td>
+                            <td className="px-4 py-3">${p.precio != null ? Number(p.precio).toFixed(2) : '-'}</td>
+                            <td className="px-4 py-3">{p.stock || '-'}</td>
+                            <td className="px-4 py-3">{p.categoria || '-'}</td>
+                            <td className="px-4 py-3">
+                                <button onClick={() => onEdit(p)} className="text-indigo-600 font-medium hover:bg-indigo-50 px-2 py-1 rounded">
+                                    Ver {puedeEscribir && '/ Editar'}
+                                </button>
+                                {puedeEscribir && (
+                                    <button onClick={() => onDelete(p.id)} className="text-red-600 font-medium hover:bg-red-50 px-2 py-1 rounded ml-1">
+                                        Eliminar
+                                    </button>
+                                )}
+                            </td>
+                        </tr>
+                    ))}
+                </tbody>
+            </table>
+        </div>
+    );
+};
 
 
 // ============================================================================
@@ -162,17 +181,18 @@ export default function AdminProductos() {
     const cargarDatos = async () => {
         setCargando(true);
         try {
-            const [productos, marcas, modelos, categorias] = await Promise.all([
-                api.get('/api/productos').catch(() => []),
-                api.get('/api/marcas').catch(() => []),
-                api.get('/api/modelos').catch(() => []),
-                api.get('/api/categorias').catch(() => [])
+            const [prodRes, marcRes, modRes, catRes] = await Promise.all([
+                api.get('/productos').catch(() => null),
+                api.get('/marcas').catch(() => null),
+                api.get('/modelos').catch(() => null),
+                api.get('/categorias').catch(() => null)
             ]);
+
             setData({ 
-                productos: productos || [], 
-                marcas: marcas || [], 
-                modelos: modelos || [], 
-                categorias: categorias || [] 
+                productos: extraerArray(prodRes), 
+                marcas: extraerArray(marcRes), 
+                modelos: extraerArray(modRes), 
+                categorias: extraerArray(catRes) 
             });
         } catch (err) {
             setMsj({ error: err.message || 'Error al cargar los datos.', exito: '' });
@@ -202,9 +222,9 @@ export default function AdminProductos() {
         if (!nombre?.trim()) return;
 
         const endpoints = {
-            categoria: '/api/categorias',
-            marca: '/api/marcas',
-            modelo: '/api/modelos'
+            categoria: '/categorias',
+            marca: '/marcas',
+            modelo: '/modelos'
         };
 
         const payload = tipo === 'modelo' 
@@ -212,10 +232,11 @@ export default function AdminProductos() {
             : { nombre: nombre.trim() };
 
         try {
-            const nuevaEntidad = await api.post(endpoints[tipo], payload);
+            const res = await api.post(endpoints[tipo], payload);
+            const nuevaEntidad = res?.data || res;
+            
             await cargarDatos();
             
-            // Selecciona automáticamente la entidad recién creada en el formulario
             if (nuevaEntidad?.id) {
                 setModal(m => ({
                     ...m,
@@ -230,8 +251,20 @@ export default function AdminProductos() {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setMsj({ error: '', exito: '' });
+
+        const payloadFinal = {
+            ...modal.form,
+            precio: parseFloat(modal.form.precio) || 0,
+            stock: parseInt(modal.form.stock, 10) || 0,
+            pesoG: parseInt(modal.form.pesoG, 10) || 0,
+            almacenamientoGb: parseInt(modal.form.almacenamientoGb, 10) || 0,
+            categoriaId: Number(modal.form.categoriaId),
+            marcaId: Number(modal.form.marcaId),
+            modeloId: Number(modal.form.modeloId),
+        };
+
         try {
-            modal.id ? await actualizarProducto(modal.id, modal.form) : await crearProducto(modal.form);
+            modal.id ? await actualizarProducto(modal.id, payloadFinal) : await crearProducto(payloadFinal);
             setMsj({ error: '', exito: `Producto ${modal.id ? 'actualizado' : 'creado'} con éxito.` });
             cerrarModal();
             cargarDatos();
@@ -253,7 +286,6 @@ export default function AdminProductos() {
 
     if (cargando) return <div className="flex min-h-[40vh] items-center justify-center text-slate-500 font-medium">Cargando Productos...</div>;
 
-  if (cargando) {
     return (
         <div>
             <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center mb-6">
