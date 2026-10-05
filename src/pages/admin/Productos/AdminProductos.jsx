@@ -7,8 +7,7 @@ import { api } from '../../../services/api.js';
 // ============================================================================
 const crearProducto = (datos) => {
     const payload = { ...datos };
-    // Se eliminan campos que no deben enviarse en la creación
-    ['id', 'modelo', 'marca', 'marcaId'].forEach(k => delete payload[k]);
+    ['id', 'modelo', 'marca', 'marcaId', 'categoria'].forEach(k => delete payload[k]);
     return api.post('/api/productos', payload);
 };
 const actualizarProducto = (id, datos) => api.put(`/api/productos/${id}`, datos);
@@ -19,7 +18,7 @@ const eliminarProducto = (id) => api.delete(`/api/productos/${id}`);
 // CONSTANTES Y ESTADOS INICIALES
 // ============================================================================
 const INITIAL_FORM = {
-    nombre: "", descripcion: "", categoria: "", precio: "",
+    nombre: "", descripcion: "", categoriaId: "", categoria: "", precio: "",
     almacenamientoGb: "", stock: "", pesoG: "",
     modeloId: "", modelo: "", marcaId: "", marca: ""
 };
@@ -29,14 +28,12 @@ const INITIAL_FORM = {
 // COMPONENTES UI REUTILIZABLES
 // ============================================================================
 
-// 1. Componente para mostrar mensajes de Error o Éxito
 const Mensaje = ({ error, exito }) => {
     if (!error && !exito) return null;
     const tipoClase = error ? 'border-red-200 bg-red-50 text-red-700' : 'border-emerald-200 bg-emerald-50 text-emerald-800';
     return <div className={`rounded-xl border p-4 text-sm font-medium mb-4 ${tipoClase}`}>{error || exito}</div>;
 };
 
-// 2. Componente que envuelve Inputs, Selects y Textareas ahorrando clases Tailwind
 const CampoForm = ({ label, as: Tag = 'input', children, ...props }) => (
     <div>
         <label className="mb-1 block text-sm font-medium text-slate-700">{label}</label>
@@ -46,8 +43,7 @@ const CampoForm = ({ label, as: Tag = 'input', children, ...props }) => (
     </div>
 );
 
-// 3. Modal que aísla por completo la lógica visual del formulario
-const ModalForm = ({ modal, onChange, onSubmit, onClose, marcas, modelos }) => {
+const ModalForm = ({ modal, onChange, onSubmit, onClose, marcas, modelos, categorias }) => {
     if (!modal.abierto) return null;
     const { id, form } = modal;
     const modelosFiltrados = form.marcaId ? modelos.filter(m => m.marcaId == form.marcaId) : [];
@@ -61,11 +57,10 @@ const ModalForm = ({ modal, onChange, onSubmit, onClose, marcas, modelos }) => {
                 </div>
                 <form onSubmit={onSubmit} className="p-6 grid gap-4 sm:grid-cols-2">
                     <CampoForm label="Nombre" name="nombre" value={form.nombre} onChange={onChange} required />
-
-                    <CampoForm label="Categoría" as="select" name="categoria" value={form.categoria} onChange={onChange} required>
+                    
+                    <CampoForm label="Categoría" as="select" name="categoriaId" value={form.categoriaId} onChange={onChange} required>
                         <option value="">Seleccionar...</option>
-                        <option value="CELULARES">CELULARES</option>
-                        <option value="ACCESORIOS">ACCESORIOS</option>
+                        {categorias.map(c => <option key={c.id} value={c.id}>{c.nombre}</option>)}
                     </CampoForm>
 
                     <CampoForm label="Marca" as="select" name="marcaId" value={form.marcaId} onChange={onChange} required>
@@ -80,18 +75,18 @@ const ModalForm = ({ modal, onChange, onSubmit, onClose, marcas, modelos }) => {
 
                     <CampoForm label="Precio" type="number" name="precio" value={form.precio} onChange={onChange} required />
                     <CampoForm label="Stock" type="number" name="stock" value={form.stock} onChange={onChange} required />
-
+                    
                     <CampoForm label="Almacenamiento (GB)" as="select" name="almacenamientoGb" value={form.almacenamientoGb} onChange={onChange} required>
                         <option value="">Seleccionar...</option>
                         {['32', '64', '128', '256', '512', '1024'].map(v => <option key={v} value={v}>{v} GB</option>)}
                     </CampoForm>
-
+                    
                     <CampoForm label="Peso (g)" type="number" name="pesoG" value={form.pesoG} onChange={onChange} required />
-
+                    
                     <div className="col-span-2">
                         <CampoForm label="Descripción" as="textarea" name="descripcion" value={form.descripcion} onChange={onChange} required={!id} />
                     </div>
-
+                    
                     <div className="col-span-2 mt-4 flex justify-end gap-3">
                         <button type="button" onClick={onClose} className="rounded-lg border px-4 py-2 text-sm font-medium hover:bg-slate-100">Cancelar</button>
                         <button type="submit" className="rounded-lg bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-500">Guardar</button>
@@ -102,7 +97,6 @@ const ModalForm = ({ modal, onChange, onSubmit, onClose, marcas, modelos }) => {
     );
 };
 
-// 4. Tabla de productos limpia y mapeada
 const TablaProductos = ({ productos, puedeEscribir, onEdit, onDelete }) => (
     <div className="overflow-hidden rounded-2xl border bg-white shadow-sm mt-6">
         <table className="w-full text-sm text-left">
@@ -148,23 +142,27 @@ const TablaProductos = ({ productos, puedeEscribir, onEdit, onDelete }) => (
 // ============================================================================
 export default function AdminProductos() {
     const { puedeEscribir } = useAdminAuth();
-
-    // Estados agrupados lógicamente para mejor lectura
-    const [data, setData] = useState({ productos: [], marcas: [], modelos: [] });
+    
+    const [data, setData] = useState({ productos: [], marcas: [], modelos: [], categorias: [] });
     const [msj, setMsj] = useState({ error: '', exito: '' });
     const [cargando, setCargando] = useState(true);
     const [modal, setModal] = useState({ abierto: false, id: null, form: INITIAL_FORM });
 
-    // Uso de Promise.all para hacer las llamadas en paralelo, bajando el tiempo de carga
     const cargarDatos = async () => {
         setCargando(true);
         try {
-            const [productos, marcas, modelos] = await Promise.all([
+            const [productos, marcas, modelos, categorias] = await Promise.all([
                 api.get('/api/productos').catch(() => []),
                 api.get('/api/marcas').catch(() => []),
-                api.get('/api/modelos').catch(() => [])
+                api.get('/api/modelos').catch(() => []),
+                api.get('/api/categorias').catch(() => [])
             ]);
-            setData({ productos: productos || [], marcas: marcas || [], modelos: modelos || [] });
+            setData({ 
+                productos: productos || [], 
+                marcas: marcas || [], 
+                modelos: modelos || [], 
+                categorias: categorias || [] 
+            });
         } catch (err) {
             setMsj({ error: err.message || 'Error al cargar los datos.', exito: '' });
         } finally {
@@ -174,7 +172,6 @@ export default function AdminProductos() {
 
     useEffect(() => { cargarDatos(); }, [puedeEscribir]);
 
-    // Manejadores simplificados
     const abrirModal = (prod = null) => {
         setModal({ abierto: true, id: prod?.id || null, form: prod ? { ...INITIAL_FORM, ...prod } : INITIAL_FORM });
         setMsj({ error: '', exito: '' });
@@ -228,20 +225,21 @@ export default function AdminProductos() {
 
             <Mensaje error={msj.error} exito={msj.exito} />
 
-            <TablaProductos
-                productos={data.productos}
-                puedeEscribir={puedeEscribir}
-                onEdit={abrirModal}
-                onDelete={handleEliminar}
+            <TablaProductos 
+                productos={data.productos} 
+                puedeEscribir={puedeEscribir} 
+                onEdit={abrirModal} 
+                onDelete={handleEliminar} 
             />
 
-            <ModalForm
-                modal={modal}
-                marcas={data.marcas}
+            <ModalForm 
+                modal={modal} 
+                marcas={data.marcas} 
                 modelos={data.modelos}
-                onChange={handleChange}
-                onSubmit={handleSubmit}
-                onClose={cerrarModal}
+                categorias={data.categorias}
+                onChange={handleChange} 
+                onSubmit={handleSubmit} 
+                onClose={cerrarModal} 
             />
         </div>
     );
