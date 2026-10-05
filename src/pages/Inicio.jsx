@@ -1,286 +1,178 @@
-import { useNavigate } from 'react-router-dom';
+// pages/Inicio.jsx
+// Home pública con hero, categorías y productos destacados desde el backend.
 
+import { useState, useEffect } from "react";
+import { useNavigate, Link } from "react-router-dom";
+import { api } from "../services/api.js";
 
 function Inicio() {
-const navigate = useNavigate();
+  const navigate = useNavigate();
 
+  const [productos, setProductos] = useState([]);
+  const [cargando, setCargando] = useState(true);
 
-    const productos = [
-        {
-            id: 1,
-            marca: 'Apple',
-            nombre: 'iPhone 15 Pro',
-            precio: '$999.00',
-            imagen: 'https://images.unsplash.com/photo-1598327105666-5b89351aff97?auto=format&fit=crop&w=600&q=80'
-        },
-        {
-            id: 2,
-            marca: 'Samsung',
-            nombre: 'Galaxy S24 Ultra',
-            precio: '$1,199.00',
-            imagen: 'https://images.unsplash.com/photo-1610945415295-d9bbf067e59c?auto=format&fit=crop&w=600&q=80'
-        },
-        {
-            id: 3,
-            marca: 'Google',
-            nombre: 'Pixel 8 Pro',
-            precio: '$899.00',
-            imagen: 'https://images.unsplash.com/photo-1598327105666-5b89351aff97?auto=format&fit=crop&w=600&q=80'
-        },
-        {
-            id: 4,
-            marca: 'Apple',
-            nombre: 'iPad Air',
-            precio: '$599.00',
-            imagen: 'https://images.unsplash.com/photo-1610945415295-d9bbf067e59c?auto=format&fit=crop&w=600&q=80'
-        },
-        {
-            id: 5,
-            marca: 'Sony',
-            nombre: 'WF-1000XM5',
-            precio: '$299.00',
-            imagen: 'https://images.unsplash.com/photo-1606220945770-b5b6c2c55bf1?auto=format&fit=crop&w=600&q=80'
-        },
-        {
-            id: 6,
-            marca: 'Apple',
-            nombre: 'Apple Watch S9',
-            precio: '$399.00',
-            imagen: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=600&q=80'
-        },
-        {
-            id: 7,
-            marca: 'Bose',
-            nombre: 'QuietComfort Ultra',
-            precio: '$429.00',
-            imagen: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=600&q=80'
-        },
-        {
-            id: 8,
-            marca: 'Marshall',
-            nombre: 'Emberton II',
-            precio: '$169.00',
-            imagen: 'https://images.unsplash.com/photo-1608043152269-423dbba4e7e1?auto=format&fit=crop&w=600&q=80'
-        }
-    ];
+  // Cargar los primeros 4 productos como "más vendidos"
+  useEffect(() => {
+    const cargarDestacados = async () => {
+      try {
+        setCargando(true);
+        const data = await api.get("/productos?page=1&limit=4");
+        setProductos(data?.data || []);
+      } catch (error) {
+        console.error("Error al cargar destacados:", error);
+      } finally {
+        setCargando(false);
+      }
+    };
+    cargarDestacados();
+  }, []);
 
-    return (
+  const formatPrecio = (n) => {
+    if (typeof n !== "number") return "-";
+    return n.toLocaleString("es-AR", { style: "currency", currency: "ARS" });
+  };
 
-        <main className="w-full bg-[#f5f7fc]">
+  const imagenPrincipal = (producto) =>
+    producto.imagenes?.[0]?.url || "";
 
-            {/* HERO*/}
+  return (
+    <main className="w-full bg-[#f5f7fc]">
+      {/* HERO */}
+      <section
+        className="relative flex h-[370px] items-center bg-cover bg-center text-white"
+        style={{
+          backgroundImage: `linear-gradient(90deg, rgba(0,0,0,0.75), rgba(0,0,0,0.25)),
+            url('https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&w=1800&q=85')`,
+        }}
+      >
+        <div className="mx-auto w-full max-w-[1200px] px-8">
+          <h1 className="mb-5 text-[42px] font-bold leading-[1.1]">
+            Los mejores equipos
+            <br />
+            están aquí
+          </h1>
+          <p className="mb-6 text-base">
+            Descubrí la nueva generación de conectividad y potencia.
+          </p>
+          <button
+            onClick={() => navigate("/catalogo")}
+            className="rounded bg-[#008b83] px-6 py-3 text-sm text-white transition duration-200 hover:bg-[#006f69]"
+          >
+            Explorar ahora
+          </button>
+        </div>
+      </section>
 
-            <section
-                className=" relative h-[370px] bg-cover bg-center flex items-center text-white"
-                style={{
-                    backgroundImage: `linear-gradient( 90deg, rgba(0,0,0,0.75), rgba(0,0,0,0.25)),
-                        url('https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?auto=format&fit=crop&w=1800&q=85')`
-                }}
-            >
+      {/* CATEGORÍAS */}
+      <section className="mx-auto grid max-w-[1200px] grid-cols-1 gap-5 px-8 py-12 md:grid-cols-2">
+        {/* CELULARES */}
+        <Link to="/catalogo?categoriaId=1">
+          <div className="group relative h-[185px] overflow-hidden rounded-md">
+            <img
+              src="https://images.unsplash.com/photo-1598327105666-5b89351aff97?auto=format&fit=crop&w=1000&q=80"
+              alt="Celulares"
+              className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
+            />
+            <div className="absolute inset-0 bg-gradient-to-r from-black/70 to-transparent"></div>
+            <div className="absolute bottom-5 left-5 text-white">
+              <h2 className="text-lg font-semibold">Celulares</h2>
+              <p className="mb-3 text-xs">Lo último en tecnología móvil</p>
+              <span className="text-xs hover:underline">Ver catálogo →</span>
+            </div>
+          </div>
+        </Link>
 
-                {/* CONTENIDO DEL HERO */}
+        {/* ACCESORIOS */}
+        <Link to="/catalogo?categoriaId=2">
+          <div className="group relative h-[185px] overflow-hidden rounded-md">
+            <img
+              src="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=1000&q=80"
+              alt="Accesorios"
+              className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
+            />
+            <div className="absolute inset-0 bg-gradient-to-r from-black/70 to-transparent"></div>
+            <div className="absolute bottom-5 left-5 text-white">
+              <h2 className="text-lg font-semibold">Accesorios</h2>
+              <p className="mb-3 text-xs">Complementá tu experiencia</p>
+              <span className="text-xs hover:underline">Ver catálogo →</span>
+            </div>
+          </div>
+        </Link>
+      </section>
 
-                <div className="w-full max-w-[1200px] mx-auto px-8">
+      {/* PRODUCTOS DESTACADOS */}
+      <section className="bg-[#edf3ff] px-8 py-12">
+        <div className="mx-auto mb-8 flex max-w-[1200px] flex-col gap-4 md:flex-row md:items-end md:justify-between">
+          <div>
+            <span className="mb-2 block text-[11px] tracking-[2px] text-[#006e69]">
+              SELECCIÓN PREMIUM
+            </span>
+            <h2 className="text-2xl font-medium text-gray-900">
+              Los más vendidos
+            </h2>
+          </div>
+          <button
+            onClick={() => navigate("/catalogo")}
+            className="text-sm text-[#006e69] hover:underline"
+          >
+            Ver todos los productos →
+          </button>
+        </div>
 
-                    <h1 className="text-[42px] leading-[1.1] font-bold mb-5">
-                        Los mejores equipos
-                        <br />
-                        están aquí
-                    </h1>
-
-                    <p className="text-base mb-6">
-                        Descubre la nueva generación de conectividad y potencia.
-                    </p>
-
-                    <button
-                        onClick={() => navigate('/catalogo')}
-                        className="bg-[#008b83] hover:bg-[#006f69] text-white px-6 py-3 rounded text-sm transition duration-200">
-                        Explorar ahora
-                    </button>
-
-                </div>
-
-
-                {/* INDICADORES */}
-
-                <div
-                    className="absolute bottom-5 left-1/2 -translate-x-1/2 flex gap-2 "
-                >
-
-                    <span className="w-5 h-[3px] bg-[#00a89d] rounded"></span>
-
-                    <span className="w-5 h-[3px] bg-gray-300 rounded"></span>
-
-                    <span className="w-5 h-[3px] bg-gray-300 rounded"></span>
-
-                </div>
-
-            </section>
-
-
-            {/*CATEGORÍAS */}
-
-            <section
-                className=" max-w-[1200px] mx-auto px-8 py-12 grid grid-cols-1 md:grid-cols-2 gap-5" >
-
-                {/* CELULARES */}
-
-                <div
-                    className=" relative h-[185px] overflow-hidden rounded-md group " >
-
+        {/* GRID */}
+        {cargando ? (
+          <div className="mx-auto grid max-w-[1200px] grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {[...Array(4)].map((_, i) => (
+              <div
+                key={i}
+                className="h-[300px] animate-pulse rounded bg-slate-200"
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="mx-auto grid max-w-[1200px] grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {productos.map((producto) => (
+              <article
+                key={producto.id}
+                className="group rounded bg-white p-4 transition duration-200 hover:-translate-y-1 hover:shadow-lg"
+              >
+                <Link to={`/producto/${producto.id}`}>
+                  <div className="mb-4 flex h-[150px] items-center justify-center bg-[#eef3fc] p-3">
                     <img
-                        src="https://images.unsplash.com/photo-1598327105666-5b89351aff97?auto=format&fit=crop&w=1000&q=80"
-                        alt="Celulares"
-                        className=" w-full h-fullobject-cover transition duration-300 group-hover:scale-105" />
+                      src={imagenPrincipal(producto)}
+                      alt={producto.nombre}
+                      className="h-full w-full object-contain"
+                      onError={(e) => {
+                        e.target.style.display = "none";
+                      }}
+                    />
+                  </div>
+                </Link>
 
-                    {/* OSCURECER IMAGEN */}
-
-                    <div
-                        className="absolute inset-0 bg-gradient-to-r from-black/70 to-transparent"> </div>
-
-
-                    {/* TEXTO */}
-
-                    <div
-                        className=" absolute left-5 bottom-5 text-white"
-                    >
-
-                        <h2 className="text-lg font-semibold">
-                            Celulares
-                        </h2>
-
-                        <p className="text-xs mb-3">
-                            Lo último en tecnología móvil
-                        </p>
-
-                        <button className="text-xs hover:underline">
-                            Ver catálogo →
-                        </button>
-
-                    </div>
-
+                <div>
+                  <span className="text-[11px] text-gray-500">
+                    {producto.marca?.toUpperCase() || "SIN MARCA"}
+                  </span>
+                  <h3 className="mb-2 mt-1 text-sm font-medium text-gray-900">
+                    {producto.nombre}
+                  </h3>
+                  <strong className="mb-4 block text-sm text-[#006e69]">
+                    {formatPrecio(producto.precio)}
+                  </strong>
+                  <Link
+                    to={`/producto/${producto.id}`}
+                    className="text-xs text-gray-500 transition hover:text-[#006e69]"
+                  >
+                    Ver más →
+                  </Link>
                 </div>
-
-
-                {/* ACCESORIOS */}
-
-                <div
-                    className=" relative h-[185px] overflow-hidden rounded-md group"
-                >
-
-                    <img
-                        src="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=1000&q=80"
-                        alt="Accesorios"
-                        className=" w-full h-full object-cover transition duration-300 group-hover:scale-105"  />
-
-                    <div className=" absolute inset-0 bg-gradient-to-r from-black/70 to-transparent" ></div>
-
-                    <div className="absolute left-5 bottom-5 text-white">
-
-                        <h2 className="text-lg font-semibold">
-                            Accesorios
-                        </h2>
-
-                        <p className="text-xs mb-3">
-                            Complementa tu experiencia
-                        </p>
-
-                        <button className="text-xs hover:underline">
-                            Ver catálogo →
-                        </button>
-
-                    </div>
-
-                </div>
-
-            </section>
-
-
-            {/* PRODUCTOS*/}
-
-            <section className="bg-[#edf3ff] px-8 py-12">
-
-                {/* HEADER PRODUCTOS */}
-
-                <div
-                    className=" max-w-[1200px] mx-auto mb-8 flex flex-col md:flex-row md:items-end md:justify-between gap-4"   >
-                  <div>
-
-                        <span  className="  block text-[#006e69] text-[11px] tracking-[2px] mb-2"  >
-                            SELECCIÓN PREMIUM
-                        </span>
-
-                        <h2 className="text-2xl font-medium text-gray-900">
-                            Los más vendidos
-                        </h2>
-
-                    </div>
-
-                    <button
-                        onClick={() => navigate('/catalogo')}
-                        className=" text-[#006e69] text-sm hover:underline">
-                        Ver todos los productos →
-                    </button>
-
-                </div>
-
-
-                {/* GRID */}
-
-                <div
-                    className="   max-w-[1200px]mx-auto  grid  grid-cols-1 sm:grid-cols-2   lg:grid-cols-4  gap-4 " >
-
-                    {productos.map((producto) => (
-
-                        <article
-                            key={producto.id}
-                            className=" bg-white rounded p-4  transition duration-200 hover:-translate-y-1 hover:shadow-lg " >
-
-                            {/* IMAGEN */}
-
-                            <div
-                                className=" h-[150px] bg-[#eef3fc] p-3 mb-4  flex items-center justify-center " >
-
-                      <img
-                                    src={producto.imagen}
-                                    alt={producto.nombre}
-                                    className=" w-full h-full object-contain " />
-                                      </div>
-
-                            {/* INFORMACIÓN */}
-                            <div>
-
-                                <span className="text-[11px] text-gray-500">
-                                    {producto.marca}
-                                </span>
-
-                                <h3
-                                    className=" text-sm text-gray-900  font-medium  mt-1  mb-2 "  >
-                                    {producto.nombre}
-                                </h3>
-
-                                <strong
-                                    className=" block text-[#006e69] text-sm mb-4 "  >
-                                    {producto.precio}
-                                </strong>
-
-                                <button
-                                    className="text-xs  text-gray-500 hover:text-[#006e69] transition "  >
-                                    Ver más →
-                                </button>
-
-                            </div>
-
-                        </article>
-
-                    ))}
-
-                </div>
-
-            </section>
-
-        </main>
-    );
+              </article>
+            ))}
+          </div>
+        )}
+      </section>
+    </main>
+  );
 }
 
 export default Inicio;

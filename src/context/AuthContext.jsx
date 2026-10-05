@@ -1,128 +1,134 @@
-import { createContext, useContext, useState, useEffect, useCallback } from 'react';
+// context/AuthContext.jsx
+// Contexto de autenticación de clientes.
+// Maneja login, registro, logout y validación de sesión contra el backend.
+
+import { createContext, useContext, useState, useEffect, useCallback } from "react";
+import { loginCliente, registrarCliente, obtenerPerfilCliente } from "../services/authService.js";
 
 const AuthContext = createContext(null);
 
 export function AuthProvider({ children }) {
-    const [usuario, setUsuario] = useState(null);
-    const [token, setToken] = useState(null);
-    const [cargando, setCargando] = useState(true);
+  const [usuario, setUsuario] = useState(null);
+  const [token, setToken] = useState(null);
+  const [cargando, setCargando] = useState(true);
 
-    // Cuando inicia la aplicación, buscamos si existe una sesión guardada
-    useEffect(() => {
-        const usuarioGuardado = localStorage.getItem('usuario');
-        const tokenGuardado = localStorage.getItem('token');
+  // Al iniciar la app, buscamos una sesión guardada en localStorage
+  // y la validamos contra el backend con GET /auth/me
+  useEffect(() => {
+    const inicializar = async () => {
+      const usuarioGuardado = localStorage.getItem("usuario");
+      const tokenGuardado = localStorage.getItem("token");
 
-        if (usuarioGuardado && tokenGuardado) {
-            setUsuario(JSON.parse(usuarioGuardado));
-            setToken(tokenGuardado);
-        }
-
+      if (!usuarioGuardado || !tokenGuardado) {
         setCargando(false);
-    }, []);
+        return;
+      }
 
-    // Cerrar sesión
-    const logout = useCallback(() => {
-        localStorage.removeItem('token');
-        localStorage.removeItem('usuario');
+      // Cargamos lo que hay en localStorage primero (respuesta rápida)
+      try {
+        setUsuario(JSON.parse(usuarioGuardado));
+        setToken(tokenGuardado);
+      } catch (e) {
+        localStorage.removeItem("usuario");
+        localStorage.removeItem("token");
+      }
 
-        setToken(null);
-        setUsuario(null);
-    }, []);
-
-    // LOGIN DE PRUEBA
-    const login = async (email, password) => {
-        // Simulamos un pequeño tiempo de espera
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-
-        // Credenciales de prueba
-        if (email === 'admin@test.com' && password === '123456') {
-            const usuarioPrueba = {
-                id: 1,
-                nombre: 'Usuario',
-                apellido: 'Prueba',
-                email: 'admin@test.com',
-            };
-
-            const tokenPrueba = 'token-de-prueba-123456';
-
-            localStorage.setItem('token', tokenPrueba);
-            localStorage.setItem('usuario', JSON.stringify(usuarioPrueba));
-
-            setToken(tokenPrueba);
-            setUsuario(usuarioPrueba);
-
-            return usuarioPrueba;
+      // Después validamos contra el backend (por si el token expiró)
+      try {
+        const data = await obtenerPerfilCliente();
+        if (data?.usuario) {
+          setUsuario(data.usuario);
+          localStorage.setItem("usuario", JSON.stringify(data.usuario));
         }
-
-        // Si las credenciales son incorrectas
-        throw new Error('Email o contraseña incorrectos');
+      } catch (error) {
+        // Token expirado o inválido: limpiamos sesión
+        console.warn("Sesión inválida, limpiando...", error.message);
+        localStorage.removeItem("usuario");
+        localStorage.removeItem("token");
+        setUsuario(null);
+        setToken(null);
+      } finally {
+        setCargando(false);
+      }
     };
 
-    // Registro de prueba
-    const registro = async (datos) => {
-        await new Promise((resolve) => setTimeout(resolve, 1000));
+    inicializar();
+  }, []);
 
-        const usuarioNuevo = {
-            id: Date.now(),
-            nombre: datos.nombre,
-            apellido: datos.apellido,
-            email: datos.email,
-        };
+  // Cerrar sesión
+  const logout = useCallback(() => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("usuario");
+    setToken(null);
+    setUsuario(null);
+  }, []);
 
-        const tokenPrueba = 'token-de-prueba-' + Date.now();
+  // Login real contra el backend
+  const login = async (email, password) => {
+    const data = await loginCliente(email, password);
 
-        localStorage.setItem('token', tokenPrueba);
-        localStorage.setItem('usuario', JSON.stringify(usuarioNuevo));
+    // data = { estado, token, usuario }
+    if (!data?.token || !data?.usuario) {
+      throw new Error("Respuesta de autenticación inválida");
+    }
 
-        setToken(tokenPrueba);
-        setUsuario(usuarioNuevo);
+    localStorage.setItem("token", data.token);
+    localStorage.setItem("usuario", JSON.stringify(data.usuario));
 
-        return usuarioNuevo;
-    };
+    setToken(data.token);
+    setUsuario(data.usuario);
 
-    // Actualizar usuario
-    const actualizarUsuario = (datosActualizados) => {
-        const usuarioNuevo = {
-            ...usuario,
-            ...datosActualizados,
-        };
+    return data.usuario;
+  };
 
-        localStorage.setItem('usuario', JSON.stringify(usuarioNuevo));
-        setUsuario(usuarioNuevo);
-    };
+  // Registro real contra el backend
+  const registro = async (datos) => {
+    const data = await registrarCliente(datos);
 
-    const value = {
-        usuario,
-        token,
-        isAuthenticated: !!usuario,
-        cargando,
-        login,
-        registro,
-        logout,
-        actualizarUsuario,
-    };
+    // data = { estado, data: { id, nombre, email, ... } }
+    if (!data?.data) {
+      throw new Error("No se pudo registrar el usuario");
+    }
 
-    return (
-        <AuthContext.Provider value={value}>
-            {cargando ? (
-                <div className="flex min-h-screen items-center justify-center bg-slate-50 text-slate-500">
-                    <p className="text-sm font-medium">
-                        Verificando sesión...
-                    </p>
-                </div>
-            ) : (
-                children
-            )}
-        </AuthContext.Provider>
-    );
+    // Después de registrar, hacemos login automático
+    return await login(datos.email, datos.password);
+  };
+
+  // Actualizar datos del usuario logueado (sin volver a pedir al backend)
+  const actualizarUsuario = (datosActualizados) => {
+    const usuarioNuevo = { ...usuario, ...datosActualizados };
+    localStorage.setItem("usuario", JSON.stringify(usuarioNuevo));
+    setUsuario(usuarioNuevo);
+  };
+
+  const value = {
+    usuario,
+    token,
+    isAuthenticated: !!usuario,
+    cargando,
+    login,
+    registro,
+    logout,
+    actualizarUsuario,
+  };
+
+  return (
+    <AuthContext.Provider value={value}>
+      {cargando ? (
+        <div className="flex min-h-screen items-center justify-center bg-slate-50 text-slate-500">
+          <p className="text-sm font-medium">Verificando sesión...</p>
+        </div>
+      ) : (
+        children
+      )}
+    </AuthContext.Provider>
+  );
 }
 
 export function useAuth() {
-    const context = useContext(AuthContext);
-
-    if (!context) {
-        throw new Error('useAuth debe ser usado dentro de un AuthProvider');
-    }
-
-    return context;
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error("useAuth debe ser usado dentro de un AuthProvider");
+  }
+  return context;
 }

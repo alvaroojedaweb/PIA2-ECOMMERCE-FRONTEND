@@ -1,28 +1,28 @@
-// authService.js maneja las peticiones de autenticación al backend.
+// services/authService.js
+// Maneja las peticiones de autenticación al backend para clientes.
 
-import { api } from './api.js';
+import { api } from "./api.js";
 
-// POST /auth/cliente/login -> Inicia sesión como cliente.
+// POST /auth/login -> Inicia sesión como cliente.
+// El backend devuelve { estado, token, usuario }.
 export const loginCliente = async (email, password) => {
-    return api.post('/auth/cliente/login', { email, password });
+  return api.post("/auth/login", { email, password });
 };
 
-// POST /auth/cliente/registro -> Registra un nuevo cliente.
+// POST /auth/register -> Registra un nuevo cliente.
+// El backend devuelve { estado, data: { id, nombre, email, ... } }.
 export const registrarCliente = async ({ nombre, apellido, email, password }) => {
-    return api.post('/auth/cliente/registro', { nombre, apellido, email, password });
+  return api.post("/auth/register", { nombre, apellido, email, password });
 };
 
-// GET /auth/cliente/refresh -> Valida el token actual y devuelve un token renovado.
-export const refreshTokenCliente = async () => {
-    return api.get('/auth/cliente/refresh');
-};
-
-// GET /auth/cliente/perfil -> Obtiene los datos completos del perfil del cliente.
+// GET /auth/me -> Obtiene los datos del usuario logueado (cliente o admin).
 export const obtenerPerfilCliente = async () => {
-    return api.get('/auth/cliente/perfil');
+  return api.get("/auth/me");
 };
 
-// PUT /auth/cliente/perfil -> Actualiza los datos del cliente logueado.
-export const actualizarPerfilCliente = async (datos) => {
-    return api.put('/auth/cliente/perfil', datos);
+// PUT /clientes/:id -> Actualiza los datos de un cliente.
+// Nota: en el backend actual este endpoint está protegido con verificarAdmin.
+// En Etapa 5 agregaremos un PUT /auth/me para que el cliente edite su propio perfil.
+export const actualizarPerfilCliente = async (id, datos) => {
+  return api.put(`/clientes/${id}`, datos);
 };

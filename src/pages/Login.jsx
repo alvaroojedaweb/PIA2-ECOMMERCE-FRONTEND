@@ -1,11 +1,10 @@
-// Login.jsx - Página de inicio de sesión para clientes.
 
-//import { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext.jsx';
 import { useState } from 'react'; 
 function Login() {
     const navigate = useNavigate();
+    const location = useLocation()
     const { login } = useAuth();  
 
     const [email, setEmail] = useState('');
@@ -27,7 +26,8 @@ function Login() {
         try {
             setEnviando(true);
             await login(email, password);
-            navigate('/');
+            const destino = location.state?.from || '/';
+            navigate(destino, { replace: true }); 
         } catch (err) {
             console.error('Error al iniciar sesión:', err);
             setError(err.message || 'Error al iniciar sesión. Verificá tus credenciales.');
