@@ -1,13 +1,13 @@
 import { useEffect, useState } from 'react';
 import { useAdminAuth } from '../../../context/AdminAuthContext.jsx';
-import { api } from '../../../services/api.js';
+import { adminApi as api} from '../../../services/adminApi.js';
 
 // ============================================================================
 // SERVICIOS (API)
 // ============================================================================
 const crearProducto = (datos) => {
     const payload = { ...datos };
-    ['id', 'modelo', 'marca', 'marcaId', 'categoria'].forEach(k => delete payload[k]);
+    ['id', 'modelo', 'marca', 'categoria'].forEach(k => delete payload[k]);
     return api.post('/api/productos', payload);
 };
 const actualizarProducto = (id, datos) => api.put(`/api/productos/${id}`, datos);
@@ -43,10 +43,18 @@ const CampoForm = ({ label, as: Tag = 'input', children, ...props }) => (
     </div>
 );
 
-const ModalForm = ({ modal, onChange, onSubmit, onClose, marcas, modelos, categorias }) => {
+const ModalForm = ({ modal, onChange, onAgregarNuevo, onSubmit, onClose, marcas, modelos, categorias }) => {
     if (!modal.abierto) return null;
     const { id, form } = modal;
     const modelosFiltrados = form.marcaId ? modelos.filter(m => m.marcaId == form.marcaId) : [];
+
+    const handleSelectChange = (e, tipo) => {
+        if (e.target.value === '__NUEVO__') {
+            onAgregarNuevo(tipo);
+        } else {
+            onChange(e);
+        }
+    };
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm" onClick={e => e.target === e.currentTarget && onClose()}>
@@ -58,19 +66,22 @@ const ModalForm = ({ modal, onChange, onSubmit, onClose, marcas, modelos, catego
                 <form onSubmit={onSubmit} className="p-6 grid gap-4 sm:grid-cols-2">
                     <CampoForm label="Nombre" name="nombre" value={form.nombre} onChange={onChange} required />
                     
-                    <CampoForm label="Categoría" as="select" name="categoriaId" value={form.categoriaId} onChange={onChange} required>
+                    <CampoForm label="Categoría" as="select" name="categoriaId" value={form.categoriaId} onChange={e => handleSelectChange(e, 'categoria')} required>
                         <option value="">Seleccionar...</option>
                         {categorias.map(c => <option key={c.id} value={c.id}>{c.nombre}</option>)}
+                        <option value="__NUEVO__" className="font-semibold text-indigo-600">+ Agregar nueva categoría</option>
                     </CampoForm>
 
-                    <CampoForm label="Marca" as="select" name="marcaId" value={form.marcaId} onChange={onChange} required>
+                    <CampoForm label="Marca" as="select" name="marcaId" value={form.marcaId} onChange={e => handleSelectChange(e, 'marca')} required>
                         <option value="">Seleccionar...</option>
                         {marcas.map(m => <option key={m.id} value={m.id}>{m.nombre}</option>)}
+                        <option value="__NUEVO__" className="font-semibold text-indigo-600">+ Agregar nueva marca</option>
                     </CampoForm>
 
-                    <CampoForm label="Modelo" as="select" name="modeloId" value={form.modeloId} onChange={onChange} required>
+                    <CampoForm label="Modelo" as="select" name="modeloId" value={form.modeloId} onChange={e => handleSelectChange(e, 'modelo')} required>
                         <option value="">Seleccionar...</option>
                         {modelosFiltrados.map(m => <option key={m.id} value={m.id}>{m.nombre}</option>)}
+                        <option value="__NUEVO__" className="font-semibold text-indigo-600">+ Agregar nuevo modelo</option>
                     </CampoForm>
 
                     <CampoForm label="Precio" type="number" name="precio" value={form.precio} onChange={onChange} required />
@@ -181,6 +192,41 @@ export default function AdminProductos() {
 
     const handleChange = (e) => setModal(m => ({ ...m, form: { ...m.form, [e.target.name]: e.target.value } }));
 
+    const handleAgregarNuevo = async (tipo) => {
+        if (tipo === 'modelo' && !modal.form.marcaId) {
+            alert('Por favor, selecciona primero una marca para poder agregar un modelo.');
+            return;
+        }
+
+        const nombre = window.prompt(`Ingrese el nombre de la nueva ${tipo}:`);
+        if (!nombre?.trim()) return;
+
+        const endpoints = {
+            categoria: '/api/categorias',
+            marca: '/api/marcas',
+            modelo: '/api/modelos'
+        };
+
+        const payload = tipo === 'modelo' 
+            ? { nombre: nombre.trim(), marcaId: modal.form.marcaId }
+            : { nombre: nombre.trim() };
+
+        try {
+            const nuevaEntidad = await api.post(endpoints[tipo], payload);
+            await cargarDatos();
+            
+            // Selecciona automáticamente la entidad recién creada en el formulario
+            if (nuevaEntidad?.id) {
+                setModal(m => ({
+                    ...m,
+                    form: { ...m.form, [`${tipo}Id`]: nuevaEntidad.id }
+                }));
+            }
+        } catch (err) {
+            setMsj({ error: err.message || `Error al crear ${tipo}.`, exito: '' });
+        }
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         setMsj({ error: '', exito: '' });
@@ -238,6 +284,7 @@ export default function AdminProductos() {
                 modelos={data.modelos}
                 categorias={data.categorias}
                 onChange={handleChange} 
+                onAgregarNuevo={handleAgregarNuevo}
                 onSubmit={handleSubmit} 
                 onClose={cerrarModal} 
             />
