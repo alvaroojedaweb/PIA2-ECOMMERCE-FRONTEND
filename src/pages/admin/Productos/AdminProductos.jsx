@@ -131,7 +131,7 @@ const TablaProductos = ({ productos = [], puedeEscribir, onView, onEdit, onDelet
             <table className="w-full text-sm text-left">
                 <thead className="bg-slate-50 text-slate-700">
                     <tr>
-                        {['ID', 'Nombre', 'Marca', 'Modelo', 'Precio', 'Stock', 'Categoría', 'Acciones'].map(h => (
+                        {['Nombre', 'Marca', 'Modelo', 'Precio', 'Stock', 'Categoría', 'Acciones'].map(h => (
                             <th key={h} className="px-4 py-3 font-semibold">{h}</th>
                         ))}
                     </tr>
@@ -141,7 +141,7 @@ const TablaProductos = ({ productos = [], puedeEscribir, onView, onEdit, onDelet
                         <tr><td colSpan="8" className="p-8 text-center text-slate-500">No hay productos registrados.</td></tr>
                     ) : arrProductos.map(p => (
                         <tr key={p.id} className="hover:bg-slate-50 text-slate-600">
-                            <td className="px-4 py-3">{p.id}</td>
+               
                             <td className="px-4 py-3 font-medium text-slate-900">{p.nombre}</td>
                             <td className="px-4 py-3">{p.marca || '-'}</td>
                             <td className="px-4 py-3">{p.modelo || '-'}</td>
