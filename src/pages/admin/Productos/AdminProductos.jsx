@@ -132,7 +132,9 @@ const TablaProductos = ({ productos = [], puedeEscribir, onView, onEdit, onDelet
                 <thead className="bg-slate-50 text-slate-700">
                     <tr>
                         {['Nombre', 'Marca', 'Modelo', 'Precio', 'Stock', 'Categoría', 'Acciones'].map(h => (
-                            <th key={h} className="px-4 py-3 font-semibold">{h}</th>
+                            <th key={h} className={`px-4 py-3 font-semibold ${h === 'Precio' ? 'text-right' : ''}`}>
+                                {h}
+                            </th>
                         ))}
                     </tr>
                 </thead>
@@ -145,7 +147,7 @@ const TablaProductos = ({ productos = [], puedeEscribir, onView, onEdit, onDelet
                             <td className="px-4 py-3 font-medium text-slate-900">{p.nombre}</td>
                             <td className="px-4 py-3">{p.marca || '-'}</td>
                             <td className="px-4 py-3">{p.modelo || '-'}</td>
-                            <td className="px-4 py-3">${p.precio != null ? Number(p.precio).toFixed(2) : '-'}</td>
+                            <td className="px-4 py-3 text-right font-medium tabular-nums text-slate-900">${p.precio != null ? Number(p.precio).toFixed(2) : '-'}</td>
                             <td className="px-4 py-3">{p.stock || '-'}</td>
                             <td className="px-4 py-3">{p.categoria || '-'}</td>
                             <td className="px-4 py-3">
