@@ -21,7 +21,7 @@ const TablaOrdenes = ({ ordenes = [], puedeEscribir, onView, onEdit }) => {
       <table className="w-full text-sm text-left">
         <thead className="bg-slate-50 text-slate-700">
           <tr>
-            {["Nro. Orden", "Fecha", "Total", "Estado", "Acciones"].map((h) => (
+            {["Nro. Orden", "Fecha", "Estado", "Total", "Acciones"].map((h) => (
               <th
                 key={h}
                 className={`px-4 py-3 font-semibold ${h === "Total" ? "text-right" : ""}`}
@@ -45,10 +45,11 @@ const TablaOrdenes = ({ ordenes = [], puedeEscribir, onView, onEdit }) => {
                   #{p.id}
                 </td>
                 <td className="px-4 py-3">{p.fecha || "-"}</td>
+
+                <td className="px-4 py-3">{p.estado || "-"}</td>
                 <td className="px-4 py-3 text-right font-medium tabular-nums text-slate-900">
                   ${p.total != null ? Number(p.total).toFixed(2) : "-"}
                 </td>
-                <td className="px-4 py-3">{p.estado || "-"}</td>
                 <td className="px-4 py-3">
                   <div className="flex flex-wrap items-center gap-1">
                     <button
@@ -117,5 +118,44 @@ const TablaOrdenes = ({ ordenes = [], puedeEscribir, onView, onEdit }) => {
 };
 
 export default function Registros() {
-  return <div>Registros</div>;
+  const { puedeEscribir } = useAdminAuth();
+
+  const [data, setData] = useState({
+    ordenes: [],
+    items: [],
+  });
+  const [msj, setMsj] = useState({ error: "", exito: "" });
+  const [cargando, setCargando] = useState(true);
+
+  const cargarDatos = async () => {
+    setCargando(true);
+    try {
+      const [ordRes] = await Promise.all([
+        api.get("/ordenes-compra").catch(() => null),
+      ]);
+
+      setData({
+        ordenes: extraerArray(ordRes),
+      });
+    } catch (err) {
+      setMsj({ error: err.message || "Error al cargar los datos.", exito: "" });
+    } finally {
+      setCargando(false);
+    }
+  };
+
+  useEffect(() => {
+    cargarDatos();
+  }, [puedeEscribir]);
+
+  return (
+    <div>
+      <TablaOrdenes
+        ordenes={data.ordenes}
+        puedeEscribir={puedeEscribir}
+        onView={() => alert("onView")}
+        onEdit={() => alert("onEdit")}
+      />
+    </div>
+  );
 }

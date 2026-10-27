@@ -17,7 +17,7 @@ const menuItems = [
     { to: '/admin', label: 'Inicio', icon: '🏠' },
     { to: '/admin/empleados', label: 'Empleados', icon: '👥' },
     { to: '/admin/productos', label: 'Productos', icon: '📦' },
-    { to: '/admin/ordenes', label: 'Ordenes', icon: '🛒' },
+    { to: '/admin/ordenes', label: 'Ordenes de Compra', icon: '🛒' },
 ];
 
 function AdminLayout() {
