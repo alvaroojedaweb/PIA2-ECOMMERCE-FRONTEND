@@ -15,8 +15,9 @@ import { useAdminAuth } from '../../context/AdminAuthContext.jsx';
 // el texto visible (label) y un emoji/icono (icon).
 const menuItems = [
     { to: '/admin', label: 'Inicio', icon: '🏠' },
-    { to: '/admin/usuarios', label: 'Empleados', icon: '👥' },
+    { to: '/admin/empleados', label: 'Empleados', icon: '👥' },
     { to: '/admin/productos', label: 'Productos', icon: '📦' },
+    { to: '/admin/ordenes', label: 'Ordenes', icon: '🛒' },
 ];
 
 function AdminLayout() {

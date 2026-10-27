@@ -5,6 +5,7 @@
 //   - /admin/login
 //   - /admin/
 //   - /admin/usuarios
+//   - /admin/ordenes
 //
 // El login es público dentro del área admin. El resto de las rutas están
 // protegidas por <RutaAdminProtegida />, que redirige a /admin/login
@@ -18,6 +19,7 @@ import LoginAdmin from './LoginAdmin.jsx';
 import AdminDashboard from './AdminDashboard.jsx';
 import AdminUsuarios from './AdminUsuarios.jsx';
 import AdminProductos from './Productos/AdminProductos.jsx';
+import AdminOrdenes from './Ordenes/Ordenes.jsx';
 
 function AdminRoutes() {
     return (
@@ -39,10 +41,12 @@ function AdminRoutes() {
             >
                 {/* index: ruta por defecto cuando la URL es /admin */}
                 <Route index element={<AdminDashboard />} />
-                {/* /admin/usuarios: CRUD de administradores */}
-                <Route path="usuarios" element={<AdminUsuarios />} />
-                                {/* /admin/usuarios: CRUD de administradores */}
+                {/* /admin/empleados: CRUD de administradores */}
+                <Route path="empleados" element={<AdminUsuarios />} />
+                {/* /admin/productos: CRUD de Productos */}
                 <Route path="productos" element={<AdminProductos />} />
+                {/* /admin/ordenes: ORDENES DE COMPRA */}
+                <Route path="ordenes" element={<AdminOrdenes />} />
             </Route>
         </Routes>
     );

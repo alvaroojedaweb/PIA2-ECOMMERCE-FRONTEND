@@ -150,6 +150,23 @@ function AdminDashboard() {
             {esAdmin ? "Gestionar empleados" : "Ver empleados"}
           </Link>
         </div>
+
+                <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+          <h3 className="text-lg font-bold text-slate-900">
+            🛒 Gestión de Ordenes de Compra
+          </h3>
+          <p className="mt-1 text-sm text-slate-600">
+            {esAdmin
+              ? "Gestioná los empleados del panel y asigná roles."
+              : "Visualizá el listado de empleados."}
+          </p>
+          <Link
+            to="/admin/usuarios"
+            className="mt-4 inline-block rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-teal-500"
+          >
+            {esAdmin ? "Gestionar empleados" : "Ver empleados"}
+          </Link>
+        </div>
       </div>
     </div>
   );
