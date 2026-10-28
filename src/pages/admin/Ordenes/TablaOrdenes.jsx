@@ -1,21 +1,11 @@
-import { useEffect, useState } from "react";
-import { useAdminAuth } from "../../../context/AdminAuthContext.jsx";
-import { adminApi as api } from "../../../services/adminApi.js";
-
 // Helper para extraer arreglos de forma segura de las respuestas del backend
-const extraerArray = (respuesta) => {
-  if (!respuesta) return [];
-  if (Array.isArray(respuesta)) return respuesta;
-  if (Array.isArray(respuesta.data)) return respuesta.data;
-  return [];
-};
 
-// SERVICIOS (API) - Sin incluir '/api' duplicado
-const actualizarOrden = (id, datos) => api.put(`/ordenes-compra/${id}`, datos);
-
-const TablaOrdenes = ({ ordenes = [], puedeEscribir, onView, onEdit }) => {
-  const arrOrdenes = extraerArray(ordenes);
-
+export const TablaOrdenes = ({
+  ordenes = [],
+  puedeEscribir,
+  onView,
+  onEdit,
+}) => {
   return (
     <div className="overflow-hidden rounded-2xl border bg-white shadow-sm mt-6">
       <table className="w-full text-sm text-left">
@@ -32,14 +22,14 @@ const TablaOrdenes = ({ ordenes = [], puedeEscribir, onView, onEdit }) => {
           </tr>
         </thead>
         <tbody className="divide-y divide-slate-100">
-          {!arrOrdenes.length ? (
+          {!ordenes.length ? (
             <tr>
               <td colSpan="8" className="p-8 text-center text-slate-500">
                 No hay Ordenes registrados.
               </td>
             </tr>
           ) : (
-            arrOrdenes.map((p) => (
+            ordenes.map((p) => (
               <tr key={p.id} className="hover:bg-slate-50 text-slate-600">
                 <td className="px-4 py-3 font-medium text-slate-900">
                   #{p.id}
@@ -116,46 +106,3 @@ const TablaOrdenes = ({ ordenes = [], puedeEscribir, onView, onEdit }) => {
     </div>
   );
 };
-
-export default function Registros() {
-  const { puedeEscribir } = useAdminAuth();
-
-  const [data, setData] = useState({
-    ordenes: [],
-    items: [],
-  });
-  const [msj, setMsj] = useState({ error: "", exito: "" });
-  const [cargando, setCargando] = useState(true);
-
-  const cargarDatos = async () => {
-    setCargando(true);
-    try {
-      const [ordRes] = await Promise.all([
-        api.get("/ordenes-compra").catch(() => null),
-      ]);
-
-      setData({
-        ordenes: extraerArray(ordRes),
-      });
-    } catch (err) {
-      setMsj({ error: err.message || "Error al cargar los datos.", exito: "" });
-    } finally {
-      setCargando(false);
-    }
-  };
-
-  useEffect(() => {
-    cargarDatos();
-  }, [puedeEscribir]);
-
-  return (
-    <div>
-      <TablaOrdenes
-        ordenes={data.ordenes}
-        puedeEscribir={puedeEscribir}
-        onView={() => alert("onView")}
-        onEdit={() => alert("onEdit")}
-      />
-    </div>
-  );
-}
