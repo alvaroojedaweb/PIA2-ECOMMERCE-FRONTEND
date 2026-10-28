@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useAdminAuth } from "../../../context/AdminAuthContext.jsx";
 import { adminApi as api } from "../../../services/adminApi.js";
 import { TablaOrdenes } from "./TablaOrdenes.jsx";
+import { ModalVerOrden } from "./ModalVerOrden.jsx";
 
 // SERVICIOS (API) - Sin incluir '/api' duplicado
 const actualizarOrden = (id, datos) => api.put(`/ordenes-compra/${id}`, datos);
@@ -17,10 +18,15 @@ export default function AdminOrdenes() {
   const { puedeEscribir } = useAdminAuth();
   const [data, setData] = useState({
     ordenes: [],
-    items: [],
+    ordenSeleccionada: {},
   });
   const [msj, setMsj] = useState({ error: "", exito: "" });
   const [cargando, setCargando] = useState(true);
+  const [modal, setModal] = useState({
+    abierto: false,
+    id: null,
+    soloLectura: false,
+  });
 
   const cargarDatos = async () => {
     setCargando(true);
@@ -39,6 +45,32 @@ export default function AdminOrdenes() {
     }
   };
 
+  const onView = (orden) => {
+    setData((prev) => ({
+      ...prev,
+      ordenSeleccionada: orden,
+    }));
+
+    setModal({
+      abierto: true,
+      id: orden.id,
+      soloLectura: true,
+    });
+  };
+
+  const onClose = () => {
+    setData((prev) => ({
+      ...prev,
+      ordenSeleccionada: null,
+    }));
+
+    setModal({
+      abierto: false,
+      id: null,
+      soloLectura: true,
+    });
+  };
+
   useEffect(() => {
     cargarDatos();
   }, [puedeEscribir]);
@@ -54,11 +86,15 @@ export default function AdminOrdenes() {
           </p>
         </div>
       </div>
-
+      <ModalVerOrden
+        modal={modal}
+        onClose={onClose}
+        data={data.ordenSeleccionada}
+      />
       <TablaOrdenes
         ordenes={data.ordenes}
         puedeEscribir={puedeEscribir}
-        onView={() => alert("onView")}
+        onView={onView}
         onEdit={() => alert("onEdit")}
       />
     </div>
