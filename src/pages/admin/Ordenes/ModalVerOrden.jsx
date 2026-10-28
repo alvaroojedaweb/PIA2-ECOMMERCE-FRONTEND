@@ -1,4 +1,5 @@
 export const ModalVerOrden = ({ modal, onClose, data }) => {
+    if (!modal.soloLectura) return null;
     if (!modal.abierto) return null;
     const { id } = modal;
     

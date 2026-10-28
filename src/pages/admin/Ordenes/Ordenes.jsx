@@ -3,6 +3,7 @@ import { useAdminAuth } from "../../../context/AdminAuthContext.jsx";
 import { adminApi as api } from "../../../services/adminApi.js";
 import { TablaOrdenes } from "./TablaOrdenes.jsx";
 import { ModalVerOrden } from "./ModalVerOrden.jsx";
+import { ModalActualizarOrden } from "./ModalActualizarOrden.jsx";
 
 // SERVICIOS (API) - Sin incluir '/api' duplicado
 const actualizarOrden = (id, datos) => api.put(`/ordenes-compra/${id}`, datos);
@@ -69,6 +70,42 @@ export default function AdminOrdenes() {
       id: null,
       soloLectura: true,
     });
+
+    cargarDatos();
+  };
+
+  const onEdit = (orden) => {
+    setData((prev) => ({
+      ...prev,
+      ordenSeleccionada: orden,
+    }));
+
+    setModal({
+      abierto: true,
+      id: orden.id,
+      soloLectura: false,
+    });
+  };
+
+  const onSubmit = async (e) => {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const datos = Object.fromEntries(formData.entries());
+
+    actualizarOrden(modal.id, datos)
+      .then((res) => {
+        setMsj({ error: "", exito: "Orden actualizada correctamente." });
+      })
+      .catch((err) => {
+        setMsj({
+          error: err.message || "Error al actualizar la orden.",
+          exito: "",
+        });
+      })
+      .finally(() => {
+        onClose();
+        cargarDatos();
+      });
   };
 
   useEffect(() => {
@@ -86,16 +123,24 @@ export default function AdminOrdenes() {
           </p>
         </div>
       </div>
+      <ModalActualizarOrden
+        modal={modal}
+        onClose={onClose}
+        onSubmit={onSubmit}
+        data={data.ordenSeleccionada}
+      />
+
       <ModalVerOrden
         modal={modal}
         onClose={onClose}
         data={data.ordenSeleccionada}
       />
+
       <TablaOrdenes
         ordenes={data.ordenes}
         puedeEscribir={puedeEscribir}
         onView={onView}
-        onEdit={() => alert("onEdit")}
+        onEdit={onEdit}
       />
     </div>
   );
