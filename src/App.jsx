@@ -18,6 +18,8 @@ import Carrito from "./pages/Carrito.jsx";
 import Checkout from "./pages/Checkout.jsx";
 import ConfirmacionOrden from "./pages/ConfirmacionOrden.jsx";
 import MisPedidos from "./pages/MisPedidos.jsx";
+import RecuperarPassword from './pages/RecuperarPassword.jsx';
+import ResetPassword from './pages/ResetPassword.jsx';
 import "./App.css";
 
 // PublicLayout agrupa todas las rutas públicas con el mismo Header, Footer
@@ -35,6 +37,8 @@ function PublicLayout() {
           <Route path="/login" element={<Login />} />
           <Route path="/registro" element={<Registro />} />
           <Route path="/carrito" element={<Carrito />} />
+          <Route path="/recuperar-password" element={<RecuperarPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
           <Route
             path="/checkout"
             element={
