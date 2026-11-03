@@ -92,10 +92,6 @@ export const ModalVerOrden = ({ modal, onClose, data }) => {
                                 <dd className="mt-0.5 break-words font-medium text-slate-800">{cliente.email || '-'}</dd>
                             </div>
                             <div>
-                                <dt className="text-slate-500">ID de cliente</dt>
-                                <dd className="mt-0.5 font-medium text-slate-800">{cliente.id ?? '-'}</dd>
-                            </div>
-                            <div>
                                 <dt className="text-slate-500">Dirección de envío</dt>
                                 <dd className="mt-0.5 font-medium text-slate-800">{orden.direccionEnvio || '-'}</dd>
                             </div>
