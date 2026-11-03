@@ -36,7 +36,7 @@ export const ModalVerOrden = ({ modal, onClose, data }) => {
 
     return (
         <div
-            className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-slate-900/60 p-4 backdrop-blur-sm sm:p-6"
+            className="fixed inset-0 z-50 flex justify-center bg-slate-900/60 p-4 backdrop-blur-sm sm:p-6"
             onClick={e => e.target === e.currentTarget && onClose()}
         >
             <section
