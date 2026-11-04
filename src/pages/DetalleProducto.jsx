@@ -7,6 +7,12 @@ import { api } from "../services/api.js";
 import { useAuth } from "../context/AuthContext.jsx";
 import { useCarrito } from "../context/CarritoContext.jsx";
 
+// ⚠️ FUNCIÓN PARA CONSTRUIR LA URL DE LA IMAGEN
+const getImagenUrl = (url) => {
+  if (!url) return null;
+  return url.startsWith("http") ? url : `http://localhost:2222${url}`;
+};
+
 function DetalleProducto() {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -60,7 +66,6 @@ function DetalleProducto() {
         `¡Agregado! ${cantidad} ${cantidad === 1 ? "unidad" : "unidades"} de "${producto.nombre}"`
       );
 
-      // Ocultar mensaje después de 3 segundos
       setTimeout(() => setMensajeExito(""), 3000);
     } catch (err) {
       console.error("Error al agregar al carrito:", err);
@@ -127,9 +132,12 @@ function DetalleProducto() {
             <div className="mb-3 flex h-96 items-center justify-center rounded-lg bg-slate-50 p-4">
               {imagenes[imagenActiva].url ? (
                 <img
-                  src={imagenes[imagenActiva].url}
+                  src={getImagenUrl(imagenes[imagenActiva].url)} // ⚠️ FIX APLICADO
                   alt={producto.nombre}
                   className="h-full w-full object-contain"
+                  onError={(e) => {
+                    e.target.style.display = "none";
+                  }}
                 />
               ) : (
                 <span className="text-6xl">📱</span>
@@ -148,9 +156,12 @@ function DetalleProducto() {
                     }`}
                   >
                     <img
-                      src={img.url}
+                      src={getImagenUrl(img.url)} // ⚠️ FIX APLICADO
                       alt={`${producto.nombre} ${i + 1}`}
                       className="h-full w-full object-cover"
+                      onError={(e) => {
+                        e.target.style.display = "none";
+                      }}
                     />
                   </button>
                 ))}
