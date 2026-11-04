@@ -115,9 +115,11 @@ function Catalogo() {
     return n.toLocaleString("es-AR", { style: "currency", currency: "ARS" });
   };
 
-  const imagenPrincipal = (producto) =>
-    producto.imagenes?.[0]?.url ||
-    "https://via.placeholder.com/300x300?text=Sin+imagen";
+  const getImagenUrl = (url) => {
+  if (!url) return null;
+  return url.startsWith('http') ? url : `http://localhost:2222${url}`;
+};
+const imagenPrincipal = (producto) => getImagenUrl(producto.imagenes?.[0]?.url);
 
   const limpiarFiltros = () => {
     setCategoriaId("");

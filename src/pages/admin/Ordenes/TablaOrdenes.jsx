@@ -6,6 +6,18 @@ export const TablaOrdenes = ({
   onView,
   onEdit,
 }) => {
+  // ⚠️ FUNCIÓN PARA FORMATEAR LA FECHA
+  const formatFecha = (fecha) => {
+    if (!fecha) return "-";
+    return new Date(fecha).toLocaleString("es-AR", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
+
   return (
     <div className="overflow-hidden rounded-2xl border bg-white shadow-sm mt-6">
       <table className="w-full text-sm text-left">
@@ -24,8 +36,9 @@ export const TablaOrdenes = ({
         <tbody className="divide-y divide-slate-100">
           {!ordenes.length ? (
             <tr>
-              <td colSpan="8" className="p-8 text-center text-slate-500">
-                No hay Ordenes registrados.
+              {/* ⚠️ CORREGIDO: colSpan de 5 (no 8) para que ocupe toda la tabla */}
+              <td colSpan="5" className="p-8 text-center text-slate-500">
+                No hay Órdenes registradas.
               </td>
             </tr>
           ) : (
@@ -34,9 +47,10 @@ export const TablaOrdenes = ({
                 <td className="px-4 py-3 font-medium text-slate-900">
                   #{p.id}
                 </td>
-                <td className="px-4 py-3">{p.fecha || "-"}</td>
+                {/* ⚠️ APLICAMOS EL FORMATO DE FECHA */}
+                <td className="px-4 py-3">{formatFecha(p.fecha || p.createdAt)}</td>
 
-                <td className="px-4 py-3">{p.estado || "-"}</td>
+                <td className="px-4 py-3 capitalize">{p.estado || "-"}</td>
                 <td className="px-4 py-3 text-right font-medium tabular-nums text-slate-900">
                   ${p.total != null ? Number(p.total).toFixed(2) : "-"}
                 </td>
