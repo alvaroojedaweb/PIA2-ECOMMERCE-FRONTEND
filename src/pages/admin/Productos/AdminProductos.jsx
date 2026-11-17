@@ -53,6 +53,20 @@ const CampoForm = ({ label, as: Tag = 'input', children, ...props }) => (
 );
 
 const ModalForm = ({ modal, onChange, onAgregarNuevo, onSubmit, onClose, marcas = [], modelos = [], categorias = [] }) => {
+    useEffect(() => {
+        if (!modal.abierto) return undefined;
+
+        const bodyOverflow = document.body.style.overflow;
+        const documentOverflow = document.documentElement.style.overflow;
+        document.body.style.overflow = 'hidden';
+        document.documentElement.style.overflow = 'hidden';
+
+        return () => {
+            document.body.style.overflow = bodyOverflow;
+            document.documentElement.style.overflow = documentOverflow;
+        };
+    }, [modal.abierto]);
+
     if (!modal.abierto) return null;
     const { id, form, soloLectura } = modal;
     
@@ -73,7 +87,7 @@ const ModalForm = ({ modal, onChange, onAgregarNuevo, onSubmit, onClose, marcas 
 
     return (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 p-4 backdrop-blur-sm" onClick={e => e.target === e.currentTarget && onClose()}>
-            <div className="w-full max-w-2xl overflow-hidden rounded-2xl bg-white shadow-2xl">
+            <div className="my-auto max-h-[calc(100dvh-2rem)] w-full max-w-2xl overflow-y-auto overscroll-contain rounded-2xl bg-white shadow-2xl">
                 <div className="flex items-center justify-between border-b px-6 py-4">
                     <h3 className="text-lg font-bold">{soloLectura ? 'Detalle del producto' : `${id ? 'Editar' : 'Nuevo'} producto`}</h3>
                     <button type="button" onClick={onClose} className="text-slate-400 text-2xl hover:text-slate-600">&times;</button>
