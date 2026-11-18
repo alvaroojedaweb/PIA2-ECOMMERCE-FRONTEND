@@ -23,10 +23,20 @@ function Carrito() {
     return n.toLocaleString("es-AR", { style: "currency", currency: "ARS" });
   };
 
-  const imagenProducto = (item) =>
-    item.PRODUCTO?.imagenes?.[0]?.url ||
-    item.producto?.imagenes?.[0]?.url ||
-    "";
+  const imagenProducto = (item) => {
+    const producto = item.PRODUCTO || item.producto;
+    const imagenes = Array.isArray(producto?.imagenes) ? producto.imagenes : [];
+    const primeraImagen = imagenes
+      .map((imagen, indice) => ({
+        imagen,
+        orden: Number.isFinite(Number(imagen.orden))
+          ? Number(imagen.orden)
+          : indice,
+      }))
+      .sort((a, b) => a.orden - b.orden)[0]?.imagen;
+
+    return primeraImagen?.url || "";
+  };
 
   const nombreProducto = (item) =>
     item.PRODUCTO?.nombre || item.producto?.nombre || "Producto";
