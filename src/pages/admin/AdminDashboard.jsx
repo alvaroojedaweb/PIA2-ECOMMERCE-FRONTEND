@@ -106,12 +106,12 @@ function AdminDashboard() {
 
         <div className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm">
           <p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
-            Ventas
+            Importe total de órdenes
           </p>
           <p className="mt-2 text-xl font-bold text-teal-700">
             {cargando ? "..." : formatPrecio(metricas.ventas)}
           </p>
-          <p className="mt-1 text-xs text-slate-500">Total facturado</p>
+          <p className="mt-1 text-xs text-slate-500">Incluye todas las órdenes</p>
         </div>
       </div>
 
@@ -144,27 +144,27 @@ function AdminDashboard() {
               : "Visualizá el listado de empleados."}
           </p>
           <Link
-            to="/admin/usuarios"
+            to="/admin/empleados"
             className="mt-4 inline-block rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-teal-500"
           >
             {esAdmin ? "Gestionar empleados" : "Ver empleados"}
           </Link>
         </div>
 
-                <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
           <h3 className="text-lg font-bold text-slate-900">
-            🛒 Gestión de Ordenes de Compra
+            🛒 Gestión de órdenes de compra
           </h3>
           <p className="mt-1 text-sm text-slate-600">
             {esAdmin
-              ? "Gestioná los empleados del panel y asigná roles."
-              : "Visualizá el listado de empleados."}
+              ? "Consultá y gestioná las órdenes de compra."
+              : "Consultá las órdenes de compra."}
           </p>
           <Link
-            to="/admin/usuarios"
+            to="/admin/ordenes"
             className="mt-4 inline-block rounded-lg bg-teal-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-teal-500"
           >
-            {esAdmin ? "Gestionar empleados" : "Ver empleados"}
+            Ver órdenes
           </Link>
         </div>
       </div>

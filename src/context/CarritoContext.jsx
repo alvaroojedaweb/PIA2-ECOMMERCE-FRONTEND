@@ -21,7 +21,38 @@ export function CarritoProvider({ children }) {
     try {
       setCargando(true);
       const data = await api.get("/carrito");
-      setItems(data?.data || []);
+      const itemsCarrito = data?.data || [];
+      const productosSinImagenes = [...new Set(
+        itemsCarrito
+          .filter((item) => {
+            const producto = item.PRODUCTO || item.producto;
+            return !producto?.imagenes?.length && item.productoId;
+          })
+          .map((item) => item.productoId)
+      )];
+      const productosCompletos = await Promise.all(
+        productosSinImagenes.map(async (productoId) => {
+          try {
+            const respuesta = await api.get(`/productos/${productoId}`);
+            return [productoId, respuesta?.data];
+          } catch (error) {
+            console.error(`Error al cargar imágenes del producto ${productoId}:`, error);
+            return [productoId, null];
+          }
+        })
+      );
+      const productosPorId = new Map(productosCompletos);
+
+      setItems(itemsCarrito.map((item) => {
+        const producto = item.PRODUCTO || item.producto;
+        const productoCompleto = productosPorId.get(item.productoId);
+        if (!productoCompleto) return item;
+
+        const productoConImagenes = { ...producto, ...productoCompleto };
+        return item.PRODUCTO
+          ? { ...item, PRODUCTO: productoConImagenes }
+          : { ...item, producto: productoConImagenes };
+      }));
     } catch (error) {
       console.error("Error al cargar carrito:", error);
       setItems([]);

@@ -65,7 +65,7 @@ function LoginAdmin() {
                             value={email}
                             onChange={(e) => setEmail(e.target.value)}
                             className="w-full rounded-lg border border-slate-600 bg-slate-900 px-3 py-2.5 text-white focus:border-indigo-500 focus:outline-none focus:ring-1 focus:ring-indigo-500"
-                            placeholder="admin@CelularTech.test"
+                            placeholder="Correo del administrador"
                             required
                         />
                     </div>

@@ -17,7 +17,7 @@ const menuItems = [
     { to: '/admin', label: 'Inicio', icon: '🏠' },
     { to: '/admin/empleados', label: 'Empleados', icon: '👥' },
     { to: '/admin/productos', label: 'Productos', icon: '📦' },
-    { to: '/admin/ordenes', label: 'Ordenes de Compra', icon: '🛒' },
+    { to: '/admin/ordenes', label: 'Órdenes de compra', icon: '🛒' },
 ];
 
 function AdminLayout() {
@@ -45,7 +45,7 @@ function AdminLayout() {
             <aside className="w-full border-b border-slate-700 bg-teal-900 md:w-64 md:border-b-0 md:border-r">
                 <div className="p-5">
                     <h2 className="text-lg font-bold text-white">Panel Admin</h2>
-                    <p className="text-xs text-slate-400">CeluarTech</p>
+                    <p className="text-xs text-slate-400">CelularTech</p>
                 </div>
 
                 <nav className="flex flex-col gap-1 px-3 pb-4">
@@ -95,9 +95,9 @@ function AdminLayout() {
                                 {/* Mensaje dinámico según el rol. Esto permite que
                                     ADMIN y OPERADOR vean descripciones distintas. */}
                                 {esAdmin
-                                    ? 'Acceso total: podés gestionar usuarios y roles.'
+                                    ? 'Acceso total: podés gestionar productos, empleados y órdenes.'
                                     : esOperador
-                                        ? 'Acceso de solo lectura: podés ver la lista de administradores.'
+                                        ? 'Acceso de solo lectura al panel de gestión.'
                                         : 'Sesión de administración'}
                             </p>
                         </div>

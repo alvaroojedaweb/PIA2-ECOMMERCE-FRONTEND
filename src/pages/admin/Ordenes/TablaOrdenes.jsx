@@ -25,7 +25,7 @@ export const TablaOrdenes = ({
           {!ordenes.length ? (
             <tr>
               <td colSpan="8" className="p-8 text-center text-slate-500">
-                No hay Ordenes registrados.
+                No hay órdenes registradas.
               </td>
             </tr>
           ) : (

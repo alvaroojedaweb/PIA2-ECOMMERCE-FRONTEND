@@ -272,9 +272,11 @@ function Catalogo() {
 
                     {/* INFORMACIÓN */}
                     <div className="p-4">
-                      <p className="mb-2 text-[10px] font-semibold tracking-widest text-teal-800">
-                        {producto.marca?.toUpperCase() || "SIN MARCA"}
-                      </p>
+                      {producto.marca && (
+                        <p className="mb-2 text-[10px] font-semibold tracking-widest text-teal-800">
+                          {producto.marca.toUpperCase()}
+                        </p>
+                      )}
                       <h3 className="mb-3 line-clamp-2 text-base font-medium text-slate-800">
                         {producto.nombre}
                       </h3>

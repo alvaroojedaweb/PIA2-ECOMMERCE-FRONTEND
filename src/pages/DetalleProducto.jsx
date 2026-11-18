@@ -160,9 +160,11 @@ function DetalleProducto() {
 
           {/* INFO */}
           <div className="flex flex-col">
-            <p className="mb-2 text-xs font-semibold tracking-widest text-teal-700">
-              {producto.marca?.toUpperCase() || "SIN MARCA"}
-            </p>
+            {producto.marca && (
+              <p className="mb-2 text-xs font-semibold tracking-widest text-teal-700">
+                {producto.marca.toUpperCase()}
+              </p>
+            )}
             <h1 className="mb-3 text-3xl font-bold text-slate-900">
               {producto.nombre}
             </h1>

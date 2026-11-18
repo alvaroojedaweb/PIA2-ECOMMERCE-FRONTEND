@@ -15,37 +15,32 @@ function Footer() {
                     {/* Columna 1: Marca y descripción */}
                     <div className="space-y-3">
                         <Link to="/" className="text-lg font-bold tracking-tight text-slate-900">
-                            CeluarTech
+                            CelularTech
                         </Link>
                         <p className="text-sm text-slate-600">
-                            Plataforma integral de aprendizaje en desarrollo web con React, Express y bases de datos relacionales.
+                            Tu tienda de teléfonos celulares. Encontrá tu próximo equipo en nuestro catálogo.
                         </p>
                     </div>
 
-                    {/* Columna 2: Servicios */}
+                    {/* Columna 2: Tienda */}
                     <div>
                         <h3 className="text-sm font-semibold uppercase tracking-wider text-slate-900">
-                            Servicios
+                            Tienda
                         </h3>
                         <ul className="mt-3 space-y-2 text-sm text-slate-600">
                             <li>
-                                <Link to="/servicios" className="transition hover:text-indigo-600">
-                                    Todos los servicios
+                                <Link to="/catalogo" className="transition hover:text-indigo-600">
+                                    Catálogo de teléfonos
                                 </Link>
                             </li>
                             <li>
-                                <Link to="/servicios/diseno-web" className="transition hover:text-indigo-600">
-                                    Diseño Web
+                                <Link to="/carrito" className="transition hover:text-indigo-600">
+                                    Mi carrito
                                 </Link>
                             </li>
                             <li>
-                                <Link to="/servicios/desarrollo-apps" className="transition hover:text-indigo-600">
-                                    Desarrollo de Apps
-                                </Link>
-                            </li>
-                            <li>
-                                <Link to="/servicios/software-gestion" className="transition hover:text-indigo-600">
-                                    Software de Gestión
+                                <Link to="/contacto" className="transition hover:text-indigo-600">
+                                    Contacto
                                 </Link>
                             </li>
                         </ul>
@@ -100,7 +95,7 @@ function Footer() {
 
                 {/* Línea divisoria y copyright */}
                 <div className="mt-10 border-t border-slate-100 pt-6 text-center text-xs text-slate-500">
-                    <p>© {anioActual} INTEGRADO - Todos los derechos reservados.</p>
+                    <p>© {anioActual} CelularTech. Todos los derechos reservados.</p>
                 </div>
             </div>
         </footer>
