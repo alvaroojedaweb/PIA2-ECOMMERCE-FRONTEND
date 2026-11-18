@@ -19,10 +19,19 @@ const limpiarPayload = (datos) => {
     return payload;
 };
 
-const crearProducto = (datos) => api.post('/productos', limpiarPayload(datos));
+const crearProducto = (datos, imagenes) => {
+    const formData = new FormData();
+    ['nombre', 'descripcion', 'precio', 'stock', 'pesoG', 'almacenamientoGb', 'modeloId', 'categoriaId']
+        .forEach(campo => formData.append(campo, String(datos[campo])));
+    imagenes.forEach(imagen => formData.append('imagenes', imagen));
+    return api.post('/productos', formData);
+};
 const actualizarProducto = (id, datos) => api.put(`/productos/${id}`, limpiarPayload(datos));
 const eliminarProducto = (id) => api.delete(`/productos/${id}/hard`);
 
+const TIPOS_IMAGEN_PERMITIDOS = ['image/jpeg', 'image/png', 'image/webp'];
+const MAX_IMAGENES = 5;
+const MAX_TAMANO_IMAGEN = 5 * 1024 * 1024;
 
 // ============================================================================
 // CONSTANTES Y ESTADOS INICIALES
@@ -52,7 +61,9 @@ const CampoForm = ({ label, as: Tag = 'input', children, ...props }) => (
     </div>
 );
 
-const ModalForm = ({ modal, onChange, onAgregarNuevo, onSubmit, onClose, marcas = [], modelos = [], categorias = [] }) => {
+const ModalForm = ({ modal, error, imagenes, onChangeImagenes, onEliminarImagen, onChange, onAgregarNuevo, onSubmit, onClose, marcas = [], modelos = [], categorias = [] }) => {
+    const [vistasPrevias, setVistasPrevias] = useState([]);
+
     useEffect(() => {
         if (!modal.abierto) return undefined;
 
@@ -66,6 +77,12 @@ const ModalForm = ({ modal, onChange, onAgregarNuevo, onSubmit, onClose, marcas 
             document.documentElement.style.overflow = documentOverflow;
         };
     }, [modal.abierto]);
+
+    useEffect(() => {
+        const urls = imagenes.map(imagen => URL.createObjectURL(imagen));
+        setVistasPrevias(urls);
+        return () => urls.forEach(url => URL.revokeObjectURL(url));
+    }, [imagenes]);
 
     if (!modal.abierto) return null;
     const { id, form, soloLectura } = modal;
@@ -93,6 +110,9 @@ const ModalForm = ({ modal, onChange, onAgregarNuevo, onSubmit, onClose, marcas 
                     <button type="button" onClick={onClose} className="text-slate-400 text-2xl hover:text-slate-600">&times;</button>
                 </div>
                 <form onSubmit={onSubmit} className="p-6 grid gap-4 sm:grid-cols-2">
+                    <div className="col-span-2">
+                        <Mensaje error={error} />
+                    </div>
                     <CampoForm label="Nombre" name="nombre" value={form.nombre} onChange={onChange} required disabled={soloLectura} />
                     
                     <CampoForm label="Categoría" as="select" name="categoriaId" value={form.categoriaId} onChange={e => handleSelectChange(e, 'categoria')} required disabled={soloLectura}>
@@ -126,6 +146,32 @@ const ModalForm = ({ modal, onChange, onAgregarNuevo, onSubmit, onClose, marcas 
                     <div className="col-span-2">
                         <CampoForm label="Descripción" as="textarea" name="descripcion" value={form.descripcion} onChange={onChange} required={!id} disabled={soloLectura} />
                     </div>
+
+                    {!id && !soloLectura && (
+                        <div className="col-span-2">
+                            <CampoForm
+                                label="Imágenes (entre 1 y 5, JPG, PNG o WEBP; máximo 5 MB cada una)"
+                                type="file"
+                                name="imagenes"
+                                accept="image/jpeg,image/png,image/webp"
+                                multiple
+                                required={imagenes.length === 0}
+                                onChange={onChangeImagenes}
+                            />
+                            {imagenes.length > 0 && (
+                                <div className="mt-3 flex flex-wrap gap-3">
+                                    {imagenes.map((imagen, index) => (
+                                        <div key={`${imagen.name}-${imagen.lastModified}-${index}`}>
+                                            <img src={vistasPrevias[index]} alt={`Vista previa de ${imagen.name}`} className="h-20 w-20 rounded-lg object-cover" />
+                                            <button type="button" onClick={() => onEliminarImagen(index)} className="mt-1 text-sm text-red-600">
+                                                Eliminar {imagen.name}
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+                            )}
+                        </div>
+                    )}
                     
                     <div className="col-span-2 mt-4 flex justify-end gap-3">
                         <button type="button" onClick={onClose} className="rounded-lg border px-4 py-2 text-sm font-medium hover:bg-slate-100">{soloLectura ? 'Cerrar' : 'Cancelar'}</button>
@@ -210,6 +256,7 @@ export default function AdminProductos() {
     const [msj, setMsj] = useState({ error: '', exito: '' });
     const [cargando, setCargando] = useState(true);
     const [modal, setModal] = useState({ abierto: false, id: null, form: INITIAL_FORM, soloLectura: false });
+    const [imagenes, setImagenes] = useState([]);
 
     const cargarDatos = async () => {
         setCargando(true);
@@ -237,13 +284,48 @@ export default function AdminProductos() {
     useEffect(() => { cargarDatos(); }, [puedeEscribir]);
 
     const abrirModal = (prod = null, soloLectura = false) => {
+        setImagenes([]);
         setModal({ abierto: true, id: prod?.id || null, form: prod ? { ...INITIAL_FORM, ...prod } : INITIAL_FORM, soloLectura });
         setMsj({ error: '', exito: '' });
     };
 
-    const cerrarModal = () => setModal({ abierto: false, id: null, form: INITIAL_FORM, soloLectura: false });
+    const cerrarModal = () => {
+        setImagenes([]);
+        setModal({ abierto: false, id: null, form: INITIAL_FORM, soloLectura: false });
+    };
 
     const handleChange = (e) => setModal(m => ({ ...m, form: { ...m.form, [e.target.name]: e.target.value } }));
+
+    const handleChangeImagenes = (e) => {
+        const seleccionadas = Array.from(e.target.files || []);
+        e.target.value = '';
+        const candidatas = [...imagenes, ...seleccionadas];
+
+        if (candidatas.length > MAX_IMAGENES) {
+            setMsj({ error: 'Puedes seleccionar como máximo 5 imágenes.', exito: '' });
+            return;
+        }
+
+        const imagenInvalida = candidatas.find(imagen => !TIPOS_IMAGEN_PERMITIDOS.includes(imagen.type));
+        if (imagenInvalida) {
+            setMsj({ error: 'Solo se permiten imágenes JPG, PNG o WEBP.', exito: '' });
+            return;
+        }
+
+        const imagenDemasiadoGrande = candidatas.find(imagen => imagen.size > MAX_TAMANO_IMAGEN);
+        if (imagenDemasiadoGrande) {
+            setMsj({ error: 'Cada imagen debe pesar 5 MB como máximo.', exito: '' });
+            return;
+        }
+
+        setImagenes(candidatas);
+        setMsj({ error: '', exito: '' });
+    };
+
+    const handleEliminarImagen = (indice) => {
+        setImagenes(actuales => actuales.filter((_, index) => index !== indice));
+        setMsj({ error: '', exito: '' });
+    };
 
     const handleAgregarNuevo = async (tipo) => {
         if (tipo === 'modelo' && !modal.form.marcaId) {
@@ -285,6 +367,23 @@ export default function AdminProductos() {
         e.preventDefault();
         setMsj({ error: '', exito: '' });
 
+        if (!modal.id && imagenes.length === 0) {
+            setMsj({ error: 'Selecciona al menos una imagen para crear el producto.', exito: '' });
+            return;
+        }
+        if (!modal.id && imagenes.length > MAX_IMAGENES) {
+            setMsj({ error: 'Puedes seleccionar como máximo 5 imágenes.', exito: '' });
+            return;
+        }
+        if (!modal.id && imagenes.some(imagen => !TIPOS_IMAGEN_PERMITIDOS.includes(imagen.type))) {
+            setMsj({ error: 'Solo se permiten imágenes JPG, PNG o WEBP.', exito: '' });
+            return;
+        }
+        if (!modal.id && imagenes.some(imagen => imagen.size > MAX_TAMANO_IMAGEN)) {
+            setMsj({ error: 'Cada imagen debe pesar 5 MB como máximo.', exito: '' });
+            return;
+        }
+
         const payloadFinal = {
             ...modal.form,
             precio: parseFloat(modal.form.precio) || 0,
@@ -297,10 +396,10 @@ export default function AdminProductos() {
         };
 
         try {
-            modal.id ? await actualizarProducto(modal.id, payloadFinal) : await crearProducto(payloadFinal);
+            modal.id ? await actualizarProducto(modal.id, payloadFinal) : await crearProducto(payloadFinal, imagenes);
             setMsj({ error: '', exito: `Producto ${modal.id ? 'actualizado' : 'creado'} con éxito.` });
             cerrarModal();
-            cargarDatos();
+            await cargarDatos();
         } catch (err) {
             setMsj({ error: err.message || 'Error al guardar.', exito: '' });
         }
@@ -350,6 +449,10 @@ export default function AdminProductos() {
 
             <ModalForm 
                 modal={modal} 
+                error={msj.error}
+                imagenes={imagenes}
+                onChangeImagenes={handleChangeImagenes}
+                onEliminarImagen={handleEliminarImagen}
                 marcas={data.marcas} 
                 modelos={data.modelos}
                 categorias={data.categorias}

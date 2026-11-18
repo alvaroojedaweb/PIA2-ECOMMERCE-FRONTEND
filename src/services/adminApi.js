@@ -8,9 +8,6 @@ const API_URL = import.meta.env.VITE_API_URL || "http://localhost:2222";
 
 export const adminApi = axios.create({
   baseURL: `${API_URL}/api`, // ← incluye /api
-  headers: {
-    "Content-Type": "application/json",
-  },
 });
 
 // Interceptor: agrega el token de admin
