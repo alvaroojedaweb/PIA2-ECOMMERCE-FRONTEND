@@ -21,8 +21,11 @@ const limpiarPayload = (datos) => {
 
 const crearProducto = (datos, imagenes) => {
     const formData = new FormData();
-    ['nombre', 'descripcion', 'precio', 'stock', 'pesoG', 'almacenamientoGb', 'modeloId', 'categoriaId']
+    ['nombre', 'descripcion', 'precio', 'stock', 'pesoG', 'modeloId', 'categoriaId']
         .forEach(campo => formData.append(campo, String(datos[campo])));
+    if (datos.almacenamientoGb !== null && datos.almacenamientoGb !== '') {
+        formData.append('almacenamientoGb', String(datos.almacenamientoGb));
+    }
     imagenes.forEach(imagen => formData.append('imagenes', imagen));
     return api.post('/productos', formData);
 };
@@ -159,8 +162,8 @@ const ModalForm = ({ modal, error, imagenes, imagenesEditables, onChangeImagenes
                     <CampoForm label="Precio" type="number" name="precio" value={form.precio} onChange={onChange} required disabled={soloLectura} />
                     <CampoForm label="Stock" type="number" name="stock" value={form.stock} onChange={onChange} required disabled={soloLectura} />
                     
-                    <CampoForm label="Almacenamiento (GB)" as="select" name="almacenamientoGb" value={form.almacenamientoGb} onChange={onChange} required disabled={soloLectura}>
-                        <option value="">Seleccionar...</option>
+                    <CampoForm label="Almacenamiento (GB) — opcional" as="select" name="almacenamientoGb" value={form.almacenamientoGb ?? ""} onChange={onChange} disabled={soloLectura}>
+                        <option value="">No aplica / Sin almacenamiento</option>
                         {['32', '64', '128', '256', '512', '1024'].map(v => <option key={v} value={v}>{v} GB</option>)}
                     </CampoForm>
                     
@@ -254,10 +257,11 @@ const TablaProductos = ({ productos = [], puedeEscribir, onView, onEdit, onDelet
                 <thead className="bg-slate-50 text-slate-700">
                     <tr>
                         {['Nombre', 'Marca', 'Modelo', 'Precio', 'Stock', 'Categoría', 'Acciones'].map(h => (
-                            <th key={h} className={`px-4 py-3 font-semibold ${h === 'Precio' ? 'text-right' : ''}`}>
+                            <th key={h} className={`px-4 py-3 font-semibold ${['Precio', 'Stock'].includes(h) ? 'text-right' : ''}`}>
                                 {h}
                             </th>
                         ))}
+                        
                     </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
@@ -270,7 +274,7 @@ const TablaProductos = ({ productos = [], puedeEscribir, onView, onEdit, onDelet
                             <td className="px-4 py-3">{p.marca || '-'}</td>
                             <td className="px-4 py-3">{p.modelo || '-'}</td>
                             <td className="px-4 py-3 text-right font-medium tabular-nums text-slate-900">${p.precio != null ? Number(p.precio).toFixed(2) : '-'}</td>
-                            <td className="px-4 py-3">{p.stock || '-'}</td>
+                            <td className="px-4 py-3 text-right font-medium tabular-nums text-slate-900">{p.stock ?? 0}</td>
                             <td className="px-4 py-3">{p.categoria || '-'}</td>
                             <td className="px-4 py-3">
                                 <div className="flex flex-wrap items-center gap-1">
@@ -317,6 +321,9 @@ export default function AdminProductos() {
     const [data, setData] = useState({ productos: [], marcas: [], modelos: [], categorias: [] });
     const [msj, setMsj] = useState({ error: '', exito: '' });
     const [cargando, setCargando] = useState(true);
+    const [busqueda, setBusqueda] = useState('');
+    const [paginaActual, setPaginaActual] = useState(1);
+    const ITEMS_POR_PAGINA = 6;
     const [modal, setModal] = useState({ abierto: false, id: null, form: INITIAL_FORM, soloLectura: false });
     const [imagenes, setImagenes] = useState([]);
     const [imagenesOriginales, setImagenesOriginales] = useState([]);
@@ -357,7 +364,7 @@ export default function AdminProductos() {
             : [];
         setImagenesOriginales(actuales);
         setImagenesEditables(actuales.map(imagen => ({ ...imagen, archivo: null })));
-        setModal({ abierto: true, id: prod?.id || null, form: prod ? { ...INITIAL_FORM, ...prod } : INITIAL_FORM, soloLectura });
+        setModal({ abierto: true, id: prod?.id || null, form: prod ? { ...INITIAL_FORM, ...prod, almacenamientoGb: prod.almacenamientoGb ?? "" } : INITIAL_FORM, soloLectura });
         setMsj({ error: '', exito: '' });
     };
 
@@ -493,7 +500,7 @@ export default function AdminProductos() {
             precio: parseFloat(modal.form.precio) || 0,
             stock: parseInt(modal.form.stock, 10) || 0,
             pesoG: parseInt(modal.form.pesoG, 10) || 0,
-            almacenamientoGb: parseInt(modal.form.almacenamientoGb, 10) || 0,
+            almacenamientoGb: modal.form.almacenamientoGb ? parseInt(modal.form.almacenamientoGb, 10) : null,
             categoriaId: Number(modal.form.categoriaId),
             marcaId: Number(modal.form.marcaId),
             modeloId: Number(modal.form.modeloId),
@@ -540,6 +547,22 @@ export default function AdminProductos() {
         }
     };
 
+    const productosFiltrados = data.productos.filter((p) => {
+        const termino = busqueda.toLowerCase().trim();
+        if (!termino) return true;
+        return (
+            p.nombre?.toLowerCase().includes(termino) ||
+            p.marca?.toLowerCase().includes(termino) ||
+            p.modelo?.toLowerCase().includes(termino) ||
+            p.categoria?.toLowerCase().includes(termino)
+        );
+    });
+
+    const totalPaginas = Math.max(1, Math.ceil(productosFiltrados.length / ITEMS_POR_PAGINA));
+    const paginaSegura = Math.min(paginaActual, totalPaginas);
+    const inicio = (paginaSegura - 1) * ITEMS_POR_PAGINA;
+    const productosPaginados = productosFiltrados.slice(inicio, inicio + ITEMS_POR_PAGINA);
+
     if (cargando) return <div className="flex min-h-[40vh] items-center justify-center text-slate-500 font-medium">Cargando Productos...</div>;
 
     return (
@@ -563,13 +586,55 @@ export default function AdminProductos() {
 
             <Mensaje error={msj.error} exito={msj.exito} />
 
+            <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <input
+                    type="text"
+                    value={busqueda}
+                    onChange={(e) => {
+                        setBusqueda(e.target.value);
+                        setPaginaActual(1);
+                    }}
+                    placeholder="Buscar por nombre, marca, modelo o categoría..."
+                    className="w-full max-w-md rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                />
+                <span className="text-xs text-slate-500">
+                    Mostrando {productosPaginados.length} de {productosFiltrados.length} productos
+                </span>
+            </div>
+
             <TablaProductos 
-                productos={data.productos} 
+                productos={productosPaginados} 
                 puedeEscribir={puedeEscribir} 
                 onView={p => abrirModal(p, true)}
                 onEdit={abrirModal} 
                 onDelete={handleEliminar} 
             />
+
+            {totalPaginas > 1 && (
+                <div className="mt-4 flex items-center justify-between border-t border-slate-200 pt-4 text-sm">
+                    <span className="text-slate-600">
+                        Página <strong>{paginaSegura}</strong> de <strong>{totalPaginas}</strong>
+                    </span>
+                    <div className="flex gap-2">
+                        <button
+                            type="button"
+                            disabled={paginaSegura === 1}
+                            onClick={() => setPaginaActual((p) => p - 1)}
+                            className="rounded-lg border px-3 py-1.5 font-medium hover:bg-slate-100 disabled:opacity-40"
+                        >
+                            Anterior
+                        </button>
+                        <button
+                            type="button"
+                            disabled={paginaSegura === totalPaginas}
+                            onClick={() => setPaginaActual((p) => p + 1)}
+                            className="rounded-lg border px-3 py-1.5 font-medium hover:bg-slate-100 disabled:opacity-40"
+                        >
+                            Siguiente
+                        </button>
+                    </div>
+                </div>
+            )}
 
             <ModalForm 
                 modal={modal} 

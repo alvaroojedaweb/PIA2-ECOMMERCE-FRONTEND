@@ -27,6 +27,9 @@ function AdminUsuarios() {
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState("");
   const [mensaje, setMensaje] = useState("");
+  const [busqueda, setBusqueda] = useState("");
+  const [paginaActual, setPaginaActual] = useState(1);
+  const ITEMS_POR_PAGINA = 6;
 
   const [modoFormulario, setModoFormulario] = useState(false);
   const [editandoId, setEditandoId] = useState(null);
@@ -144,6 +147,22 @@ function AdminUsuarios() {
     }
   };
 
+  const usuariosFiltrados = usuarios.filter((u) => {
+    const termino = busqueda.toLowerCase().trim();
+    if (!termino) return true;
+    return (
+      u.nombre?.toLowerCase().includes(termino) ||
+      u.apellido?.toLowerCase().includes(termino) ||
+      u.email?.toLowerCase().includes(termino) ||
+      u.rol?.toLowerCase().includes(termino)
+    );
+  });
+
+  const totalPaginas = Math.max(1, Math.ceil(usuariosFiltrados.length / ITEMS_POR_PAGINA));
+  const paginaSegura = Math.min(paginaActual, totalPaginas);
+  const inicio = (paginaSegura - 1) * ITEMS_POR_PAGINA;
+  const usuariosPaginados = usuariosFiltrados.slice(inicio, inicio + ITEMS_POR_PAGINA);
+
   if (cargando) {
     return (
       <div className="flex min-h-[40vh] items-center justify-center">
@@ -184,6 +203,23 @@ function AdminUsuarios() {
           {error}
         </div>
       )}
+
+      {/* BUSCADOR */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <input
+          type="text"
+          value={busqueda}
+          onChange={(e) => {
+            setBusqueda(e.target.value);
+            setPaginaActual(1);
+          }}
+          placeholder="Buscar por nombre, apellido, email o rol..."
+          className="w-full max-w-md rounded-xl border border-slate-300 bg-white px-4 py-2 text-sm text-slate-900 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+        />
+        <span className="text-xs text-slate-500">
+          Mostrando {usuariosPaginados.length} de {usuariosFiltrados.length} empleados
+        </span>
+      </div>
 
       {/* MODAL */}
       {modoFormulario && puedeEscribir && (
@@ -325,7 +361,7 @@ function AdminUsuarios() {
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
-            {usuarios.length === 0 ? (
+            {usuariosPaginados.length === 0 ? (
               <tr>
                 <td
                   colSpan={puedeEscribir ? 5 : 4}
@@ -335,7 +371,7 @@ function AdminUsuarios() {
                 </td>
               </tr>
             ) : (
-              usuarios.map((u) => (
+              usuariosPaginados.map((u) => (
                 <tr key={u.id} className="hover:bg-slate-50">
                   <td className="px-4 py-3 font-medium text-slate-900">
                     {u.nombre}
@@ -411,6 +447,32 @@ function AdminUsuarios() {
           </tbody>
         </table>
       </div>
+      {/* PAGINACIÓN */}
+      {totalPaginas > 1 && (
+        <div className="flex items-center justify-between border-t border-slate-200 pt-4 text-sm">
+          <span className="text-slate-600">
+            Página <strong>{paginaSegura}</strong> de <strong>{totalPaginas}</strong>
+          </span>
+          <div className="flex gap-2">
+            <button
+              type="button"
+              disabled={paginaSegura === 1}
+              onClick={() => setPaginaActual((p) => p - 1)}
+              className="rounded-lg border px-3 py-1.5 font-medium hover:bg-slate-100 disabled:opacity-40"
+            >
+              Anterior
+            </button>
+            <button
+              type="button"
+              disabled={paginaSegura === totalPaginas}
+              onClick={() => setPaginaActual((p) => p + 1)}
+              className="rounded-lg border px-3 py-1.5 font-medium hover:bg-slate-100 disabled:opacity-40"
+            >
+              Siguiente
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
