@@ -147,6 +147,26 @@ const ModalForm = ({ modal, error, imagenes, onChangeImagenes, onEliminarImagen,
                         <CampoForm label="Descripción" as="textarea" name="descripcion" value={form.descripcion} onChange={onChange} required={!id} disabled={soloLectura} />
                     </div>
 
+                    {soloLectura && (
+                        <div className="col-span-2">
+                            <p className="mb-1 block text-sm font-medium text-slate-700">Imágenes</p>
+                            {Array.isArray(form.imagenes) && form.imagenes.length > 0 ? (
+                                <div className="flex flex-wrap gap-3">
+                                    {form.imagenes.map((imagen, index) => (
+                                        <img
+                                            key={imagen.id ?? `${imagen.url}-${index}`}
+                                            src={imagen.url}
+                                            alt={`Imagen ${index + 1} de ${form.nombre}`}
+                                            className="h-24 w-24 rounded-lg object-cover"
+                                        />
+                                    ))}
+                                </div>
+                            ) : (
+                                <p className="text-sm text-slate-500">Este producto no tiene imágenes.</p>
+                            )}
+                        </div>
+                    )}
+
                     {!id && !soloLectura && (
                         <div className="col-span-2">
                             <CampoForm
