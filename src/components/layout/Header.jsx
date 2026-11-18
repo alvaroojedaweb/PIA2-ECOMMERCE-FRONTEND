@@ -59,7 +59,7 @@ function Header() {
               type="text"
               value={busqueda}
               onChange={handleBusquedaChange}
-              placeholder="Buscar dispositivos..."
+              placeholder="Buscar teléfonos..."
               className="w-full bg-transparent text-sm text-slate-700 outline-none placeholder:text-slate-400"
             />
           </div>
@@ -221,7 +221,7 @@ function Header() {
                 type="text"
                 value={busqueda}
                 onChange={handleBusquedaChange}
-                placeholder="Buscar dispositivos..."
+                placeholder="Buscar teléfonos..."
                 className="w-full bg-transparent text-sm text-slate-700 outline-none placeholder:text-slate-400"
               />
             </div>

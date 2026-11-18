@@ -123,7 +123,7 @@ function MisPedidos() {
               <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
                 <div>
                   <p className="font-semibold text-slate-800">
-                    Orden #{orden.id}
+                    Pedido #{orden.id}
                   </p>
                   <p className="text-xs text-slate-500">
                     {formatFecha(orden.fecha || orden.createdAt)}

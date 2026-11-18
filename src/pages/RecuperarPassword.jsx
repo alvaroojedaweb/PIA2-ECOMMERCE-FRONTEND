@@ -39,7 +39,7 @@ function RecuperarPassword() {
             Recuperar acceso
           </p>
           <h1 className="mt-1 text-2xl font-bold text-slate-900">
-            Olvidaste tu contraseña?
+            ¿Olvidaste tu contraseña?
           </h1>
           <p className="mt-2 text-sm text-slate-600">
             Ingresá tu email y te enviaremos un enlace para restablecer tu contraseña.

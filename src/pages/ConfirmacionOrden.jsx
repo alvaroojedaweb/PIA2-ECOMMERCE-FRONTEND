@@ -85,10 +85,10 @@ function ConfirmacionOrden() {
         <div className="mb-6 rounded-xl border border-green-200 bg-green-50 p-6 text-center">
           <div className="mb-3 text-5xl">🎉</div>
           <h1 className="mb-2 text-2xl font-bold text-green-900">
-            ¡Compra confirmada!
+            ¡Pedido registrado!
           </h1>
           <p className="text-sm text-green-800">
-            Tu pedido <strong>#{orden.id}</strong> fue registrado correctamente.
+            Tu pedido <strong>#{orden.id}</strong> quedó registrado correctamente.
           </p>
         </div>
 
@@ -100,7 +100,7 @@ function ConfirmacionOrden() {
 
           <div className="mb-4 grid gap-3 text-sm sm:grid-cols-2">
             <div>
-              <p className="text-slate-500">Número de orden</p>
+              <p className="text-slate-500">Número de pedido</p>
               <p className="font-semibold text-slate-800">#{orden.id}</p>
             </div>
             <div>

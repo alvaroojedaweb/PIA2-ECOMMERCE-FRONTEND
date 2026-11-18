@@ -48,7 +48,7 @@ export const ModalVerOrden = ({ modal, onClose, data }) => {
                 <header className="flex items-center justify-between border-b border-slate-200 px-6 py-4">
                     <div>
                         <h2 id="modal-orden-titulo" className="text-lg font-bold text-slate-900">
-                            Detalle de la orden
+                            Detalle de la orden de compra
                         </h2>
                         <p className="mt-0.5 text-sm text-slate-500">
                             Orden #{orden.id ?? modal.id}

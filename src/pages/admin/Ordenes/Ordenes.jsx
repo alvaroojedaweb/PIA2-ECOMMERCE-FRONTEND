@@ -116,10 +116,10 @@ export default function AdminOrdenes() {
       <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-center mb-6">
         <div>
           <h2 className="text-2xl font-bold text-slate-900">
-            Ordenes de Compra
+            Órdenes de compra
           </h2>
           <p className="text-sm text-slate-600">
-            Gestioná las ordenes de compra.
+            Gestioná las órdenes de compra.
           </p>
         </div>
       </div>

@@ -11,7 +11,7 @@ function Inicio() {
   const [productos, setProductos] = useState([]);
   const [cargando, setCargando] = useState(true);
 
-  // Cargar los primeros 4 productos como "más vendidos"
+  // Cargar los primeros productos del catálogo.
   useEffect(() => {
     const cargarDestacados = async () => {
       try {
@@ -47,12 +47,12 @@ function Inicio() {
       >
         <div className="mx-auto w-full max-w-[1200px] px-8">
           <h1 className="mb-5 text-[42px] font-bold leading-[1.1]">
-            Los mejores equipos
+            Tu próximo teléfono
             <br />
-            están aquí
+            está aquí
           </h1>
           <p className="mb-6 text-base">
-            Descubrí la nueva generación de conectividad y potencia.
+            Encontrá el equipo ideal para vos.
           </p>
           <button
             onClick={() => navigate("/catalogo")}
@@ -65,8 +65,7 @@ function Inicio() {
 
       {/* CATEGORÍAS */}
       <section className="mx-auto grid max-w-[1200px] grid-cols-1 gap-5 px-8 py-12 md:grid-cols-2">
-        {/* CELULARES */}
-        <Link to="/catalogo?categoriaId=1">
+        <Link to="/catalogo">
           <div className="group relative h-[185px] overflow-hidden rounded-md">
             <img
               src="https://images.unsplash.com/photo-1598327105666-5b89351aff97?auto=format&fit=crop&w=1000&q=80"
@@ -75,29 +74,29 @@ function Inicio() {
             />
             <div className="absolute inset-0 bg-gradient-to-r from-black/70 to-transparent"></div>
             <div className="absolute bottom-5 left-5 text-white">
-              <h2 className="text-lg font-semibold">Celulares</h2>
-              <p className="mb-3 text-xs">Lo último en tecnología móvil</p>
+              <h2 className="text-lg font-semibold">Teléfonos celulares</h2>
+              <p className="mb-3 text-xs">Explorá nuestros equipos disponibles</p>
               <span className="text-xs hover:underline">Ver catálogo →</span>
             </div>
           </div>
         </Link>
 
-        {/* ACCESORIOS */}
-        <Link to="/catalogo?categoriaId=2">
+        <Link to="/catalogo">
           <div className="group relative h-[185px] overflow-hidden rounded-md">
             <img
               src="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=1000&q=80"
-              alt="Accesorios"
+              alt="Accesorios para teléfonos"
               className="h-full w-full object-cover transition duration-300 group-hover:scale-105"
             />
             <div className="absolute inset-0 bg-gradient-to-r from-black/70 to-transparent"></div>
             <div className="absolute bottom-5 left-5 text-white">
               <h2 className="text-lg font-semibold">Accesorios</h2>
-              <p className="mb-3 text-xs">Complementá tu experiencia</p>
+              <p className="mb-3 text-xs">Complementá tu teléfono</p>
               <span className="text-xs hover:underline">Ver catálogo →</span>
             </div>
           </div>
         </Link>
+
       </section>
 
       {/* PRODUCTOS DESTACADOS */}
@@ -105,10 +104,10 @@ function Inicio() {
         <div className="mx-auto mb-8 flex max-w-[1200px] flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <div>
             <span className="mb-2 block text-[11px] tracking-[2px] text-[#006e69]">
-              SELECCIÓN PREMIUM
+              CELULARTECH
             </span>
             <h2 className="text-2xl font-medium text-gray-900">
-              Los más vendidos
+              Productos del catálogo
             </h2>
           </div>
           <button
@@ -150,9 +149,11 @@ function Inicio() {
                 </Link>
 
                 <div>
-                  <span className="text-[11px] text-gray-500">
-                    {producto.marca?.toUpperCase() || "SIN MARCA"}
-                  </span>
+                  {producto.marca && (
+                    <span className="text-[11px] text-gray-500">
+                      {producto.marca.toUpperCase()}
+                    </span>
+                  )}
                   <h3 className="mb-2 mt-1 text-sm font-medium text-gray-900">
                     {producto.nombre}
                   </h3>
