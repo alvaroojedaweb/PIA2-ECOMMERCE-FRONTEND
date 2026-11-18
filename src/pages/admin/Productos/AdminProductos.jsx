@@ -15,7 +15,7 @@ const extraerArray = (respuesta) => {
 // ============================================================================
 const limpiarPayload = (datos) => {
     const payload = { ...datos };
-    ['id', 'modelo', 'marca', 'categoria'].forEach(k => delete payload[k]);
+    ['id', 'modelo', 'marca', 'categoria', 'imagenes'].forEach(k => delete payload[k]);
     return payload;
 };
 
@@ -27,6 +27,17 @@ const crearProducto = (datos, imagenes) => {
     return api.post('/productos', formData);
 };
 const actualizarProducto = (id, datos) => api.put(`/productos/${id}`, limpiarPayload(datos));
+const agregarImagenProducto = (productoId, imagen) => {
+    const formData = new FormData();
+    formData.append('imagen', imagen);
+    return api.post(`/imagenes-producto/producto/${productoId}`, formData);
+};
+const actualizarImagenProducto = (imagenId, imagen) => {
+    const formData = new FormData();
+    formData.append('imagen', imagen);
+    return api.put(`/imagenes-producto/${imagenId}`, formData);
+};
+const eliminarImagenProducto = (imagenId) => api.delete(`/imagenes-producto/${imagenId}/hard`);
 const eliminarProducto = (id) => api.delete(`/productos/${id}/hard`);
 
 const TIPOS_IMAGEN_PERMITIDOS = ['image/jpeg', 'image/png', 'image/webp'];
@@ -61,8 +72,9 @@ const CampoForm = ({ label, as: Tag = 'input', children, ...props }) => (
     </div>
 );
 
-const ModalForm = ({ modal, error, imagenes, onChangeImagenes, onEliminarImagen, onChange, onAgregarNuevo, onSubmit, onClose, marcas = [], modelos = [], categorias = [] }) => {
+const ModalForm = ({ modal, error, imagenes, imagenesEditables, onChangeImagenes, onEliminarImagen, onReemplazarImagen, onQuitarImagenExistente, onChange, onAgregarNuevo, onSubmit, onClose, marcas = [], modelos = [], categorias = [] }) => {
     const [vistasPrevias, setVistasPrevias] = useState([]);
+    const [vistasPreviasEdicion, setVistasPreviasEdicion] = useState({});
 
     useEffect(() => {
         if (!modal.abierto) return undefined;
@@ -83,6 +95,17 @@ const ModalForm = ({ modal, error, imagenes, onChangeImagenes, onEliminarImagen,
         setVistasPrevias(urls);
         return () => urls.forEach(url => URL.revokeObjectURL(url));
     }, [imagenes]);
+
+    useEffect(() => {
+        const urls = imagenesEditables.reduce((resultado, imagen) => {
+            if (imagen.archivo) {
+                resultado[imagen.id] = URL.createObjectURL(imagen.archivo);
+            }
+            return resultado;
+        }, {});
+        setVistasPreviasEdicion(urls);
+        return () => Object.values(urls).forEach(url => URL.revokeObjectURL(url));
+    }, [imagenesEditables]);
 
     if (!modal.abierto) return null;
     const { id, form, soloLectura } = modal;
@@ -147,18 +170,35 @@ const ModalForm = ({ modal, error, imagenes, onChangeImagenes, onEliminarImagen,
                         <CampoForm label="Descripción" as="textarea" name="descripcion" value={form.descripcion} onChange={onChange} required={!id} disabled={soloLectura} />
                     </div>
 
-                    {soloLectura && (
+                    {(soloLectura || id) && (
                         <div className="col-span-2">
                             <p className="mb-1 block text-sm font-medium text-slate-700">Imágenes</p>
-                            {Array.isArray(form.imagenes) && form.imagenes.length > 0 ? (
+                            {imagenesEditables.length > 0 ? (
                                 <div className="flex flex-wrap gap-3">
-                                    {form.imagenes.map((imagen, index) => (
+                                    {imagenesEditables.map((imagen, index) => (
+                                        <div key={imagen.id ?? `${imagen.url}-${index}`} className="w-28">
                                         <img
-                                            key={imagen.id ?? `${imagen.url}-${index}`}
-                                            src={imagen.url}
+                                            src={vistasPreviasEdicion[imagen.id] || imagen.url}
                                             alt={`Imagen ${index + 1} de ${form.nombre}`}
-                                            className="h-24 w-24 rounded-lg object-cover"
+                                            className="h-24 w-28 rounded-lg object-cover"
                                         />
+                                        {!soloLectura && (
+                                            <>
+                                                <label className="mt-1 block cursor-pointer text-sm text-blue-600">
+                                                    Reemplazar
+                                                    <input
+                                                        type="file"
+                                                        accept="image/jpeg,image/png,image/webp"
+                                                        className="mt-1 block w-full text-xs text-slate-600"
+                                                        onChange={e => onReemplazarImagen(imagen.id, e)}
+                                                    />
+                                                </label>
+                                                <button type="button" onClick={() => onQuitarImagenExistente(imagen.id)} className="mt-1 text-sm text-red-600">
+                                                    Eliminar
+                                                </button>
+                                            </>
+                                        )}
+                                        </div>
                                     ))}
                                 </div>
                             ) : (
@@ -167,15 +207,17 @@ const ModalForm = ({ modal, error, imagenes, onChangeImagenes, onEliminarImagen,
                         </div>
                     )}
 
-                    {!id && !soloLectura && (
+                    {!soloLectura && (
                         <div className="col-span-2">
                             <CampoForm
-                                label="Imágenes (entre 1 y 5, JPG, PNG o WEBP; máximo 5 MB cada una)"
+                                label={id
+                                    ? 'Agregar imágenes (JPG, PNG o WEBP; máximo 5 MB cada una)'
+                                    : 'Imágenes (entre 1 y 5, JPG, PNG o WEBP; máximo 5 MB cada una)'}
                                 type="file"
                                 name="imagenes"
                                 accept="image/jpeg,image/png,image/webp"
                                 multiple
-                                required={imagenes.length === 0}
+                                required={!id && imagenes.length === 0}
                                 onChange={onChangeImagenes}
                             />
                             {imagenes.length > 0 && (
@@ -277,6 +319,8 @@ export default function AdminProductos() {
     const [cargando, setCargando] = useState(true);
     const [modal, setModal] = useState({ abierto: false, id: null, form: INITIAL_FORM, soloLectura: false });
     const [imagenes, setImagenes] = useState([]);
+    const [imagenesOriginales, setImagenesOriginales] = useState([]);
+    const [imagenesEditables, setImagenesEditables] = useState([]);
 
     const cargarDatos = async () => {
         setCargando(true);
@@ -305,12 +349,22 @@ export default function AdminProductos() {
 
     const abrirModal = (prod = null, soloLectura = false) => {
         setImagenes([]);
+        const actuales = Array.isArray(prod?.imagenes)
+            ? prod.imagenes.map(imagen => ({
+                ...imagen,
+                id: imagen.id ?? imagen.id_imagen,
+            }))
+            : [];
+        setImagenesOriginales(actuales);
+        setImagenesEditables(actuales.map(imagen => ({ ...imagen, archivo: null })));
         setModal({ abierto: true, id: prod?.id || null, form: prod ? { ...INITIAL_FORM, ...prod } : INITIAL_FORM, soloLectura });
         setMsj({ error: '', exito: '' });
     };
 
     const cerrarModal = () => {
         setImagenes([]);
+        setImagenesOriginales([]);
+        setImagenesEditables([]);
         setModal({ abierto: false, id: null, form: INITIAL_FORM, soloLectura: false });
     };
 
@@ -321,7 +375,7 @@ export default function AdminProductos() {
         e.target.value = '';
         const candidatas = [...imagenes, ...seleccionadas];
 
-        if (candidatas.length > MAX_IMAGENES) {
+        if (!modal.id && candidatas.length > MAX_IMAGENES) {
             setMsj({ error: 'Puedes seleccionar como máximo 5 imágenes.', exito: '' });
             return;
         }
@@ -339,6 +393,29 @@ export default function AdminProductos() {
         }
 
         setImagenes(candidatas);
+        setMsj({ error: '', exito: '' });
+    };
+
+    const handleReemplazarImagen = (id, e) => {
+        const [archivo] = Array.from(e.target.files || []);
+        e.target.value = '';
+        if (!archivo) return;
+        if (!TIPOS_IMAGEN_PERMITIDOS.includes(archivo.type)) {
+            setMsj({ error: 'Solo se permiten imágenes JPG, PNG o WEBP.', exito: '' });
+            return;
+        }
+        if (archivo.size > MAX_TAMANO_IMAGEN) {
+            setMsj({ error: 'Cada imagen debe pesar 5 MB como máximo.', exito: '' });
+            return;
+        }
+        setImagenesEditables(actuales => actuales.map(imagen =>
+            imagen.id === id ? { ...imagen, archivo } : imagen
+        ));
+        setMsj({ error: '', exito: '' });
+    };
+
+    const handleQuitarImagenExistente = (id) => {
+        setImagenesEditables(actuales => actuales.filter(imagen => imagen.id !== id));
         setMsj({ error: '', exito: '' });
     };
 
@@ -403,6 +480,13 @@ export default function AdminProductos() {
             setMsj({ error: 'Cada imagen debe pesar 5 MB como máximo.', exito: '' });
             return;
         }
+        const imagenesNuevasInvalidas = imagenes.some(imagen =>
+            !TIPOS_IMAGEN_PERMITIDOS.includes(imagen.type) || imagen.size > MAX_TAMANO_IMAGEN
+        );
+        if (modal.id && imagenesNuevasInvalidas) {
+            setMsj({ error: 'Las imágenes deben ser JPG, PNG o WEBP y pesar 5 MB como máximo.', exito: '' });
+            return;
+        }
 
         const payloadFinal = {
             ...modal.form,
@@ -416,7 +500,27 @@ export default function AdminProductos() {
         };
 
         try {
-            modal.id ? await actualizarProducto(modal.id, payloadFinal) : await crearProducto(payloadFinal, imagenes);
+            if (modal.id) {
+                await actualizarProducto(modal.id, payloadFinal);
+
+                for (const imagen of imagenesEditables) {
+                    if (imagen.archivo) {
+                        await actualizarImagenProducto(imagen.id, imagen.archivo);
+                    }
+                }
+
+                const idsConservados = new Set(imagenesEditables.map(imagen => imagen.id));
+                const imagenesEliminadas = imagenesOriginales.filter(imagen => !idsConservados.has(imagen.id));
+                for (const imagen of imagenesEliminadas) {
+                    await eliminarImagenProducto(imagen.id);
+                }
+
+                for (const imagen of imagenes) {
+                    await agregarImagenProducto(modal.id, imagen);
+                }
+            } else {
+                await crearProducto(payloadFinal, imagenes);
+            }
             setMsj({ error: '', exito: `Producto ${modal.id ? 'actualizado' : 'creado'} con éxito.` });
             cerrarModal();
             await cargarDatos();
@@ -471,8 +575,11 @@ export default function AdminProductos() {
                 modal={modal} 
                 error={msj.error}
                 imagenes={imagenes}
+                imagenesEditables={imagenesEditables}
                 onChangeImagenes={handleChangeImagenes}
                 onEliminarImagen={handleEliminarImagen}
+                onReemplazarImagen={handleReemplazarImagen}
+                onQuitarImagenExistente={handleQuitarImagenExistente}
                 marcas={data.marcas} 
                 modelos={data.modelos}
                 categorias={data.categorias}
