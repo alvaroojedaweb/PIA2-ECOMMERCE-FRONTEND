@@ -20,6 +20,7 @@ import ConfirmacionOrden from "./pages/ConfirmacionOrden.jsx";
 import MisPedidos from "./pages/MisPedidos.jsx";
 import RecuperarPassword from './pages/RecuperarPassword.jsx';
 import ResetPassword from './pages/ResetPassword.jsx';
+import ConfirmarEmail from './pages/ConfirmarEmail.jsx';
 import "./App.css";
 
 // PublicLayout agrupa todas las rutas públicas con el mismo Header, Footer
@@ -71,6 +72,7 @@ function PublicLayout() {
               </RutaProtegida>
             }
           />
+          <Route path="/confirmar-email" element={<ConfirmarEmail />} />
         </Routes>
       </main>
       <Footer />
