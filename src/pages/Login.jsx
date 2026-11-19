@@ -36,12 +36,12 @@ function Login() {
         }
     };
     return (
-        <div className="bg-gray-300 flex items-center justify-center  border rounded-xl">
+        <div className="flex items-center justify-center rounded-2xl border border-slate-200 bg-slate-100 p-6 sm:p-10">
         <div className="mx-auto max-w-md space-y-6 ">
             <div className="text-center ">
                 <p className="text-sm font-bold uppercase tracking-widest text-teal-600 ">Bienvenido!</p>
                 <h1 className="mt-1 text-3xl font-bold text-slate-900">Iniciar sesión</h1>
-                <p className="mt-2 text-sm text-slate-600 text-teal-600 text font-bold">
+                <p className="mt-2 text-sm font-semibold text-teal-600">
                     Ingresá con tu cuenta.
                 </p>
             </div>
@@ -66,7 +66,12 @@ function Login() {
                 </div>
 
                 <div>
-                    <label className="mb-1 block text-sm font-medium text-slate-700">Contraseña</label>
+                    <div className="mb-1 flex items-center justify-between">
+                        <label className="block text-sm font-medium text-slate-700">Contraseña</label>
+                        <Link to="/recuperar-password" className="text-xs font-medium text-teal-600 hover:underline">
+                            ¿Olvidaste tu contraseña?
+                        </Link>
+                        </div>
                     <input
                         type="password"
                         value={password}
@@ -93,6 +98,8 @@ function Login() {
                 </Link>
             </p>
             
+
+
         </div>
 
         
