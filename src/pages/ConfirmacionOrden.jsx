@@ -9,7 +9,7 @@ import { useAuth } from "../context/AuthContext.jsx";
 function ConfirmacionOrden() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, usuario } = useAuth();
 
   const [orden, setOrden] = useState(null);
   const [cargando, setCargando] = useState(true);
@@ -37,8 +37,9 @@ function ConfirmacionOrden() {
   }, [id, isAuthenticated, navigate]);
 
   const formatPrecio = (n) => {
-    if (typeof n !== "number") return "-";
-    return n.toLocaleString("es-AR", { style: "currency", currency: "ARS" });
+    const num = Number(n);
+    if (isNaN(num)) return "-";
+    return num.toLocaleString("es-AR", { style: "currency", currency: "ARS" });
   };
 
   const formatFecha = (fecha) => {
@@ -50,6 +51,18 @@ function ConfirmacionOrden() {
       hour: "2-digit",
       minute: "2-digit",
     });
+  };
+
+  const generarEnlaceWhatsApp = () => {
+    if (!orden) return "#";
+    const itemsLista = (orden.items || orden.ITEM_ORDEN_COMPRAs || [])
+      .map((item) => `• ${item.cantidad}x ${item.PRODUCTO?.nombre || `Producto #${item.productoId}`}`)
+      .join("\n");
+
+    const nombreCliente = usuario?.nombre ? `${usuario.nombre} ${usuario.apellido || ""}`.trim() : "Cliente";
+    const mensaje = `¡Hola CelularTech! 👋\nSoy *${nombreCliente}* y acabo de confirmar mi pedido *#${orden.id}*.\n\n*Detalle:*\n${itemsLista}\n\n*Total:* ${formatPrecio(orden.total)}\n*Envío a:* ${orden.direccionEnvio}\n\nQuisiera consultar por el seguimiento de mi envío. ¡Gracias!`;
+
+    return `https://wa.me/5493515551234?text=${encodeURIComponent(mensaje)}`;
   };
 
   if (cargando) {
@@ -82,19 +95,19 @@ function ConfirmacionOrden() {
     <main className="min-h-screen bg-slate-100 px-4 py-8 md:px-8">
       <div className="mx-auto max-w-3xl">
         {/* BANNER DE ÉXITO */}
-        <div className="mb-6 rounded-xl border border-green-200 bg-green-50 p-6 text-center">
+        <div className="mb-6 rounded-2xl border border-emerald-200 bg-emerald-50 p-6 text-center shadow-sm">
           <div className="mb-3 text-5xl">🎉</div>
-          <h1 className="mb-2 text-2xl font-bold text-green-900">
-            ¡Pedido registrado!
+          <h1 className="mb-2 text-2xl font-bold text-emerald-900">
+            ¡Pedido registrado con éxito!
           </h1>
-          <p className="text-sm text-green-800">
-            Tu pedido <strong>#{orden.id}</strong> quedó registrado correctamente.
+          <p className="text-sm text-emerald-800">
+            Tu pedido <strong>#{orden.id}</strong> quedó confirmado. Te enviamos el comprobante por correo y también podés seguirlo por WhatsApp.
           </p>
         </div>
 
         {/* DETALLE */}
-        <div className="rounded-xl border border-slate-200 bg-white p-6">
-          <h2 className="mb-4 text-lg font-semibold text-slate-800">
+        <div className="rounded-2xl border border-slate-200 bg-white p-6 shadow-sm">
+          <h2 className="mb-4 text-lg font-bold text-slate-900">
             Detalle del pedido
           </h2>
 
@@ -111,9 +124,9 @@ function ConfirmacionOrden() {
             </div>
             <div>
               <p className="text-slate-500">Estado</p>
-              <p className="font-semibold capitalize text-slate-800">
+              <span className="inline-block rounded-full bg-amber-100 px-2.5 py-0.5 text-xs font-semibold capitalize text-amber-800">
                 {orden.estado}
-              </p>
+              </span>
             </div>
             <div>
               <p className="text-slate-500">Dirección de envío</p>
@@ -125,7 +138,7 @@ function ConfirmacionOrden() {
 
           {/* ITEMS */}
           <div className="mt-6 border-t border-slate-200 pt-4">
-            <h3 className="mb-3 text-sm font-semibold uppercase tracking-wider text-slate-500">
+            <h3 className="mb-3 text-xs font-bold uppercase tracking-wider text-slate-500">
               Productos
             </h3>
             <div className="space-y-3">
@@ -152,7 +165,7 @@ function ConfirmacionOrden() {
           </div>
 
           {/* TOTAL */}
-          <div className="mt-4 flex justify-between border-t border-slate-200 pt-4 text-lg font-bold text-slate-800">
+          <div className="mt-4 flex justify-between border-t border-slate-200 pt-4 text-lg font-extrabold text-slate-900">
             <span>Total</span>
             <span>{formatPrecio(Number(orden.total))}</span>
           </div>
@@ -165,17 +178,25 @@ function ConfirmacionOrden() {
           )}
         </div>
 
-        {/* ACCIONES */}
-        <div className="mt-6 flex flex-wrap gap-3">
+        {/* ACCIONES + BOTÓN WHATSAPP */}
+        <div className="mt-6 flex flex-wrap items-center gap-3">
+          <a
+            href={generarEnlaceWhatsApp()}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 rounded-xl bg-[#25D366] px-5 py-2.5 text-sm font-bold text-white shadow-sm transition hover:bg-[#1ebe5d]"
+          >
+            <span>💬</span> Seguir pedido por WhatsApp
+          </a>
           <Link
             to="/mis-pedidos"
-            className="rounded-lg bg-teal-700 px-5 py-2.5 text-sm font-medium text-white hover:bg-teal-600"
+            className="rounded-xl bg-teal-700 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-teal-600"
           >
             Ver mis pedidos
           </Link>
           <Link
             to="/catalogo"
-            className="rounded-lg border border-slate-300 bg-white px-5 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
+            className="rounded-xl border border-slate-300 bg-white px-5 py-2.5 text-sm font-semibold text-slate-700 transition hover:bg-slate-50"
           >
             Seguir comprando
           </Link>
