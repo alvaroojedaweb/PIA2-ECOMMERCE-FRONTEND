@@ -16,7 +16,6 @@ function ResetPassword() {
   const [error, setError] = useState("");
   const [enviando, setEnviando] = useState(false);
 
-  // Validación por si no hay token en la URL
   useEffect(() => {
     if (!token) {
       setError("El enlace no es válido o expiró. Por favor, solicitá uno nuevo.");
@@ -47,11 +46,9 @@ function ResetPassword() {
       setEnviando(true);
       const data = await api.post("/auth/reset-password", {
         token,
-        nuevaPassword,
+        password: nuevaPassword,
       });
       setMensaje(data.mensaje || "Contraseña actualizada. Redirigiendo...");
-      
-      // Redirigir al login después de 2 segundos
       setTimeout(() => navigate("/login"), 2000);
     } catch (err) {
       console.error("Error al resetear contraseña:", err);
