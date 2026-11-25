@@ -34,7 +34,7 @@ export const TablaOrdenes = ({
                 <td className="px-4 py-3 font-medium text-slate-900">
                   #{p.id}
                 </td>
-                <td className="px-4 py-3">{p.fecha || "-"}</td>
+                <td className="px-4 py-3">{p.fecha ? new Date(p.fecha).toLocaleString("es-AR", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "-"}</td>
 
                 <td className="px-4 py-3">{p.estado || "-"}</td>
                 <td className="px-4 py-3 text-right font-medium tabular-nums text-slate-900">
@@ -106,3 +106,4 @@ export const TablaOrdenes = ({
     </div>
   );
 };
+
