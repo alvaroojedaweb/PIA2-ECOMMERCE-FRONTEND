@@ -277,7 +277,7 @@ const TablaProductos = ({ productos = [], puedeEscribir, onView, onEdit, onDelet
                             <td className="px-4 py-3 text-right font-medium tabular-nums text-slate-900">{p.stock ?? 0}</td>
                             <td className="px-4 py-3">{p.categoria || '-'}</td>
                             <td className="px-4 py-3">
-                                <div className="flex flex-wrap items-center gap-1">
+                                <div className="flex flex-nowrap items-center gap-1 whitespace-nowrap">
                                 <button type="button" onClick={() => onView(p)} title="Ver detalle" aria-label={`Ver detalle de ${p.nombre}`} className="inline-flex items-center gap-1 rounded px-2 py-1 font-medium text-indigo-600 hover:bg-indigo-50">
                                     <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" aria-hidden="true">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -656,3 +656,4 @@ export default function AdminProductos() {
         </div>
     );
 }
+
